@@ -46,10 +46,10 @@ const formatResultDisplay = (text) => (text ? text.split('(')[0].trim() : '-');
 
 const COLORS = {
   'ดีเยี่ยม': '#6366f1',      
-  'ผ่านเกณฑ์': '#10B981',    
-  'ควรปรับปรุง': '#F59E0B', 
-  'พบข้อผิดพลาด': '#f43f5e', 
-  'ไม่ผ่านเกณฑ์': '#be123c', 
+  'ผ่านเกณฑ์': '#10B981',     
+  'ควรปรับปรุง': '#F59E0B',   
+  'พบข้อผิดพลาด': '#f43f5e',  
+  'ไม่ผ่านเกณฑ์': '#be123c',  
 };
 
 const getResultColor = (fullText) => {
@@ -218,6 +218,7 @@ const App = () => {
         await updateDoc(docRef, {
             type: editingCase.type,
             supervisor: editingCase.supervisor || '',
+            supervisorFilter: editingCase.supervisor || 'N/A', // Update filter field to match selected supervisor
             result: editingCase.result,
             comment: editingCase.comment || '',
             evaluations: editingCase.evaluations,
@@ -745,7 +746,7 @@ const App = () => {
         <div className="bg-white/90 backdrop-blur-xl p-8 rounded-[2rem] border border-slate-200 w-full max-w-[360px] text-center shadow-2xl relative z-10">
           <div className="flex justify-center mb-6"><div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 shadow-inner"><IntageLogo className="scale-110" /></div></div>
           <div className="space-y-1 mb-8"><h2 className="text-slate-800 font-black uppercase text-xs tracking-[0.3em] italic">CATI CES 2026</h2><p className="text-slate-500 text-[9px] font-bold uppercase tracking-widest">Analytics & QC System (Firebase)</p></div>
-          <form onSubmit={(e) => { e.preventDefault(); if(inputUser==='Admin'&&inputPass==='8888') { setIsAuthenticated(true); setUserRole('Admin'); } else if(inputUser==='QC'&&inputPass==='1234') { setIsAuthenticated(true); setUserRole('QC'); } else if(inputUser==='INV'&&inputPass==='1234') { setIsAuthenticated(true); setUserRole('INV'); } else { setLoginError('Login Failed'); } }} className="space-y-4 text-left">
+          <form onSubmit={(e) => { e.preventDefault(); if(inputUser==='Admin'&&inputPass==='8888') { setIsAuthenticated(true); setUserRole('Admin'); } else if(inputUser==='QC'&&inputPass==='1234') { setIsAuthenticated(true); setUserRole('QC'); } else if(inputUser==='Gallup'&&inputPass==='1234') { setIsAuthenticated(true); setUserRole('Gallup'); } else if(inputUser==='INV'&&inputPass==='1234') { setIsAuthenticated(true); setUserRole('INV'); } else { setLoginError('Login Failed'); } }} className="space-y-4 text-left">
             <div className="space-y-1.5"><label className="text-[9px] font-black text-slate-400 uppercase tracking-widest pl-2">Username</label><input type="text" value={inputUser} onChange={e=>setInputUser(e.target.value)} className="w-full pl-5 pr-5 py-3 bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-600 text-sm font-bold" placeholder="Username" /></div>
             <div className="space-y-1.5"><label className="text-[9px] font-black text-slate-400 uppercase tracking-widest pl-2">Password</label><input type="password" value={inputPass} onChange={e=>setInputPass(e.target.value)} className="w-full pl-5 pr-5 py-3 bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-600 text-sm font-bold" placeholder="••••••••" /></div>
             {loginError && (<div className="bg-rose-50 border border-rose-200 py-2 rounded-lg text-center text-rose-500 text-[9px] font-black uppercase">{loginError}</div>)}
@@ -922,7 +923,7 @@ const App = () => {
               </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            {['Admin', 'QC'].includes(userRole) && (
+            {['Admin', 'QC', 'Gallup'].includes(userRole) && (
               <button onClick={handleExportCSV} className="flex items-center gap-2 px-5 py-3 rounded-2xl text-xs font-black shadow-sm transition-all border bg-sky-50 border-sky-200 text-sky-600 hover:bg-sky-100">
                 <Download size={16} /> EXPORT CSV
               </button>
@@ -1126,7 +1127,7 @@ const App = () => {
                                         <div className="flex items-center gap-1.5 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100 w-fit"><MapPin size={10} className="text-indigo-500" /><span className="text-[10px] font-black text-indigo-600">{item.touchpoint}</span></div>
                                     </div>
                                 </td>
-                                <td className="px-8 py-6 border-r border-slate-100"><div className="font-black text-slate-700 text-sm group-hover:text-indigo-600 transition-colors flex items-center gap-2">{item.agent} {isExpanded ? <ChevronDown size={14} className="text-slate-400" /> : <ChevronRight size={14} className="text-slate-400" />}</div><div className="text-[9px] text-slate-400 font-bold mt-0.5 italic uppercase font-sans tracking-wider">TYPE: {item.type} &bull; SUP: {item.supervisorFilter}</div></td>
+                                <td className="px-8 py-6 border-r border-slate-100"><div className="font-black text-slate-700 text-sm group-hover:text-indigo-600 transition-colors flex items-center gap-2">{item.agent} {isExpanded ? <ChevronDown size={14} className="text-slate-400" /> : <ChevronRight size={14} className="text-slate-400" />}</div><div className="text-[9px] text-slate-400 font-bold mt-0.5 italic uppercase font-sans tracking-wider">TYPE: {item.type} &bull; SUP: {item.supervisor || item.supervisorFilter}</div></td>
                                 <td className="px-4 py-6 text-center border-r border-slate-100"><span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[9px] font-black border uppercase shadow-sm" style={{ backgroundColor: `${getResultColor(item.result)}10`, color: getResultColor(item.result), borderColor: `${getResultColor(item.result)}30` }}>{formatResultDisplay(item.result)}</span></td>
                                 <td className="px-8 py-6">
                                     <p className="text-slate-500 italic max-w-sm truncate group-hover:text-slate-700 transition-colors font-sans leading-relaxed">{item.comment ? `"${item.comment}"` : '-'}</p>
@@ -1147,7 +1148,7 @@ const App = () => {
                                 <div className="flex items-center justify-between mb-8">
                                     <div className="flex items-center gap-4"><div className="p-3 bg-white border border-slate-200 rounded-2xl text-indigo-600 shadow-sm"><Award /></div><div><h4 className="font-black uppercase italic tracking-widest text-sm text-slate-700">{isNewAudit ? "START AUDIT SESSION" : "ASSESSMENT DETAIL"} (ID: {item.interviewerId} : {item.rawName})</h4><p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest italic leading-relaxed">{isNewAudit ? "กรุณากรอกคะแนนและผลสรุปเพื่อบันทึกงานใหม่" : "แก้ไขคะแนน P:AB และ สรุปผล M"}</p></div></div>
                                     <div className="flex gap-2">
-                                    {userRole === 'Admin' || userRole === 'QC' ? (
+                                    {['Admin', 'QC', 'Gallup'].includes(userRole) ? (
                                         !isEditing ? (
                                             <button onClick={(e) => { e.stopPropagation(); setEditingCase({...item}); }} className={`flex items-center gap-2 px-6 py-3 rounded-2xl text-[10px] font-black uppercase border transition-all ${isNewAudit ? 'bg-indigo-600 hover:bg-indigo-700 text-white border-indigo-600 shadow-lg shadow-indigo-900/20' : 'bg-white hover:bg-slate-50 text-slate-600 border-slate-200'}`}>
                                                 <Edit2 size={12} className={isNewAudit ? "text-white" : "text-indigo-500"}/> 
@@ -1164,44 +1165,44 @@ const App = () => {
 
                                 {isEditing && (
                                     <div className="mb-8 p-6 bg-indigo-50 border border-indigo-100 rounded-[2rem] shadow-inner" onClick={(e) => e.stopPropagation()}>
-                                            <div className="flex items-center gap-2 mb-4 text-indigo-600 font-black text-[10px] uppercase italic tracking-widest"><Info size={16} /> กำหนดประเภทงาน (AC / BC) & Supervisor (H)</div>
-                                            <div className="flex flex-col md:flex-row gap-4">
-                                                <div className="flex gap-2">
-                                                    {['AC', 'BC'].map(t => (
-                                                        <button key={t} onClick={() => setEditingCase({...editingCase, type: t})} className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase transition-all border ${editingCase.type === t ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg shadow-indigo-900/40' : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'}`}>{t} MODE</button>
-                                                    ))}
-                                                </div>
-                                                <div className="flex-1 bg-white border border-slate-200 rounded-xl p-2 flex items-center gap-3 pl-4">
-                                                    <UserPlus size={16} className="text-indigo-500"/>
-                                                    <div className="flex-1 relative">
-                                                        <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">CATI Supervisor (Column H)</p>
-                                                        <select value={editingCase.supervisor || ''} onChange={e=>setEditingCase({...editingCase, supervisor: e.target.value})} className="w-full bg-transparent text-slate-800 text-xs font-bold outline-none appearance-none"><option value="" className="text-slate-400">ระบุชื่อ Supervisor...</option>{SUPERVISOR_OPTIONS.map(opt => (<option key={opt} value={opt} className="text-slate-800">{opt}</option>))}</select><ChevronDown size={12} className="absolute right-0 top-1/2 translate-y-0 text-slate-400 pointer-events-none" />
+                                                    <div className="flex items-center gap-2 mb-4 text-indigo-600 font-black text-[10px] uppercase italic tracking-widest"><Info size={16} /> กำหนดประเภทงาน (AC / BC) & Supervisor (H)</div>
+                                                    <div className="flex flex-col md:flex-row gap-4">
+                                                        <div className="flex gap-2">
+                                                            {['AC', 'BC'].map(t => (
+                                                                <button key={t} onClick={() => setEditingCase({...editingCase, type: t})} className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase transition-all border ${editingCase.type === t ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg shadow-indigo-900/40' : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'}`}>{t} MODE</button>
+                                                            ))}
+                                                        </div>
+                                                        <div className="flex-1 bg-white border border-slate-200 rounded-xl p-2 flex items-center gap-3 pl-4">
+                                                            <UserPlus size={16} className="text-indigo-500"/>
+                                                            <div className="flex-1 relative">
+                                                                <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">CATI Supervisor (Column H)</p>
+                                                                <select value={editingCase.supervisor || ''} onChange={e=>setEditingCase({...editingCase, supervisor: e.target.value})} className="w-full bg-transparent text-slate-800 text-xs font-bold outline-none appearance-none"><option value="" className="text-slate-400">ระบุชื่อ Supervisor...</option>{SUPERVISOR_OPTIONS.map(opt => (<option key={opt} value={opt} className="text-slate-800">{opt}</option>))}</select><ChevronDown size={12} className="absolute right-0 top-1/2 translate-y-0 text-slate-400 pointer-events-none" />
+                                                            </div>
+                                                        </div>
+                                                        {editingCase.type === "ยังไม่ได้ตรวจ" && <p className="text-rose-500 text-[10px] font-black uppercase self-center animate-pulse">*** กรุณาเลือก AC หรือ BC เพื่อบันทึกงาน</p>}
                                                     </div>
-                                                </div>
-                                                {editingCase.type === "ยังไม่ได้ตรวจ" && <p className="text-rose-500 text-[10px] font-black uppercase self-center animate-pulse">*** กรุณาเลือก AC หรือ BC เพื่อบันทึกงาน</p>}
-                                            </div>
                                     </div>
                                 )}
 
                                 <div className="mb-6 p-4 bg-white border border-indigo-100 rounded-2xl flex items-center justify-between shadow-sm">
-                                        <div className="flex items-center gap-3">
-                                            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${hasAudio ? 'bg-indigo-50 text-indigo-600' : 'bg-slate-100 text-slate-400'}`}>
-                                                {hasAudio ? <PlayCircle size={20} /> : <FilterX size={20} />}
-                                            </div>
-                                            <div>
-                                                <h5 className="text-xs font-black text-slate-700 uppercase">หลักฐานเสียงสัมภาษณ์</h5>
-                                                <p className="text-[10px] text-slate-400">{hasAudio ? 'คลิกเพื่อฟังไฟล์เสียงที่บันทึกไว้' : 'ไม่พบข้อมูลไฟล์เสียงในระบบ'}</p>
-                                            </div>
-                                        </div>
-                                        {hasAudio ? (
-                                            <a href={item.audio} target="_blank" rel="noopener noreferrer" className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-all shadow-lg shadow-indigo-200">
-                                                <ExternalLink size={12}/> OPEN AUDIO
-                                            </a>
-                                        ) : (
-                                            <span className="px-5 py-2 bg-slate-100 text-slate-400 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 border border-slate-200 cursor-not-allowed">
-                                                <FilterX size={12}/> ไม่พบไฟล์
-                                            </span>
-                                        )}
+                                                    <div className="flex items-center gap-3">
+                                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${hasAudio ? 'bg-indigo-50 text-indigo-600' : 'bg-slate-100 text-slate-400'}`}>
+                                                            {hasAudio ? <PlayCircle size={20} /> : <FilterX size={20} />}
+                                                        </div>
+                                                        <div>
+                                                            <h5 className="text-xs font-black text-slate-700 uppercase">หลักฐานเสียงสัมภาษณ์</h5>
+                                                            <p className="text-[10px] text-slate-400">{hasAudio ? 'คลิกเพื่อฟังไฟล์เสียงที่บันทึกไว้' : 'ไม่พบข้อมูลไฟล์เสียงในระบบ'}</p>
+                                                        </div>
+                                                    </div>
+                                                    {hasAudio ? (
+                                                        <a href={item.audio} target="_blank" rel="noopener noreferrer" className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-all shadow-lg shadow-indigo-200">
+                                                            <ExternalLink size={12}/> OPEN AUDIO
+                                                        </a>
+                                                    ) : (
+                                                        <span className="px-5 py-2 bg-slate-100 text-slate-400 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 border border-slate-200 cursor-not-allowed">
+                                                            <FilterX size={12}/> ไม่พบไฟล์
+                                                        </span>
+                                                    )}
                                 </div>
 
                                 <div className="mb-8 p-6 bg-slate-100 border border-slate-200 rounded-[2rem] shadow-inner" onClick={(e) => e.stopPropagation()}>
