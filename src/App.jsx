@@ -4,10 +4,12 @@ import {
 } from 'recharts';
 import { 
   Users, CheckCircle, AlertTriangle, XCircle, Search, 
-  FileText, BarChart2, MessageSquare, TrendingUp, Database, RefreshCw, Trash2, FilterX, PlayCircle, Settings, AlertCircle, Info, ChevronRight, ExternalLink, User, ChevronDown, CheckSquare, Square, X, Lock, Activity, Filter, Clock, Award, Save, Edit2, Hash, Star, Zap, MousePointerClick, UserPlus, MapPin, Flame, Cloud, Loader2, Upload, FileJson, Download, AlertOctagon
+  FileText, BarChart2, MessageSquare, TrendingUp, Database, RefreshCw, Trash2, FilterX, PlayCircle, Settings, AlertCircle, Info, ChevronRight, ExternalLink, User, ChevronDown, CheckSquare, Square, X, Lock, Activity, Filter, Clock, Award, Save, Edit2, Hash, Star, Zap, MousePointerClick, UserPlus, MapPin, Flame, Cloud, Loader2, Upload, FileJson, Download, AlertOctagon,
+  FolderOpen, FileSpreadsheet, DownloadCloud, ChevronLeft, Calendar
 } from 'lucide-react';
 import { initializeApp, getApps } from "firebase/app";
 import { getFirestore, collection, onSnapshot, doc, updateDoc, addDoc, query, orderBy, serverTimestamp, writeBatch, getDocs } from "firebase/firestore";
+import { getStorage, ref, listAll, getDownloadURL, getBlob } from "firebase/storage";
 
 const DEFAULT_FIREBASE_CONFIG = {
   apiKey: "AIzaSyACA30Lms1pRejuA2FdtYDYDSe8fD2lNB8",
@@ -139,6 +141,7 @@ export default function App() {
 
   // Firebase
   const [db, setDb] = useState(null);
+  const [storage, setStorage] = useState(null); // <-- Added Storage State
   const [firebaseConfigStr, setFirebaseConfigStr] = useState(
     (() => { try { return localStorage.getItem('firebase_config_str') || JSON.stringify(DEFAULT_FIREBASE_CONFIG, null, 2); } catch(e) { return JSON.stringify(DEFAULT_FIREBASE_CONFIG, null, 2); } })()
   );
@@ -166,6 +169,14 @@ export default function App() {
   const [selectedTouchpoints, setSelectedTouchpoints] = useState([]);
   const [activeKpiFilter, setActiveKpiFilter] = useState(null);
 
+  // Hotsheet Download State <-- Added Hotsheet States
+  const [showHotsheetModal, setShowHotsheetModal] = useState(false);
+  const [hotsheetPath, setHotsheetPath] = useState('Hotsheet');
+  const [hotsheetFolders, setHotsheetFolders] = useState([]);
+  const [hotsheetFiles, setHotsheetFiles] = useState([]);
+  const [hotsheetLoading, setHotsheetLoading] = useState(false);
+  const [selectedHotsheetMonth, setSelectedHotsheetMonth] = useState('');
+
   // UI
   const [activeCell, setActiveCell] = useState({ agent: null, resultType: null });
   const [expandedCaseId, setExpandedCaseId] = useState(null);
@@ -180,6 +191,7 @@ export default function App() {
       const existing = getApps().find(a => a.name === appName);
       const app = existing || initializeApp(config, appName);
       setDb(getFirestore(app));
+      setStorage(getStorage(app)); // <-- Init Storage
       setError(null);
     } catch (e) {
       setError("Firebase Config ไม่ถูกต้อง: " + e.message);
@@ -204,6 +216,79 @@ export default function App() {
     });
     return () => unsub();
   }, [db]);
+
+  // ── Hotsheet Logic ── <-- Added Hotsheet Fetch & Filter
+  useEffect(() => {
+    if (!showHotsheetModal || !storage) return;
+
+    const fetchHotsheetStorage = async () => {
+      setHotsheetLoading(true);
+      try {
+        const listRef = ref(storage, hotsheetPath);
+        const res = await listAll(listRef);
+        setHotsheetFolders(res.prefixes.map(p => p.name));
+
+        const filesData = await Promise.all(res.items.map(async (itemRef) => {
+          const url = await getDownloadURL(itemRef);
+          return { name: itemRef.name, url: url, fullPath: itemRef.fullPath };
+        }));
+        setHotsheetFiles(filesData);
+        setSelectedHotsheetMonth(''); // Reset filter on path change
+      } catch (err) {
+        console.error("Storage Error:", err);
+        showNotif('error', "ไม่สามารถโหลดไฟล์ได้ (อาจจะไม่มีโฟลเดอร์หรือติดสิทธิ์)");
+      }
+      setHotsheetLoading(false);
+    };
+
+    fetchHotsheetStorage();
+  }, [showHotsheetModal, hotsheetPath, storage]);
+
+  const hotsheetAvailableMonths = useMemo(() => {
+    const months = new Set();
+    hotsheetFiles.forEach(f => {
+      const match = f.name.match(/_(\d{2})(\d{2})(\d{4})\./); // format _MMDDYYYY.
+      if (match) months.add(`${match[1]}/${match[3]}`); // Save as MM/YYYY
+    });
+    return [...months].sort();
+  }, [hotsheetFiles]);
+
+  const filteredHotsheetFiles = useMemo(() => {
+    if (!selectedHotsheetMonth) return hotsheetFiles;
+    return hotsheetFiles.filter(f => {
+      const match = f.name.match(/_(\d{2})(\d{2})(\d{4})\./);
+      if (match) {
+        return `${match[1]}/${match[3]}` === selectedHotsheetMonth;
+      }
+      return false;
+    });
+  }, [hotsheetFiles, selectedHotsheetMonth]);
+
+  const downloadHotsheetFile = async (fullPath, url, fileName) => {
+    try {
+      showNotif('success', `กำลังเตรียมไฟล์ดาวน์โหลด...`);
+      const fileRef = ref(storage, fullPath);
+      const blob = await getBlob(fileRef); // ใช้ getBlob ของ Firebase แทน fetch
+      const blobUrl = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = fileName; // <--- บังคับชื่อไฟล์ที่ถูกต้อง
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(blobUrl);
+      a.remove();
+    } catch (err) {
+      console.warn("GetBlob failed (CORS issue), fallback to direct link", err);
+      // แผนสำรอง กรณีติด CORS จะโหลดแบบปกติแทน (ซึ่งจะทำให้ชื่อยาว)
+      const a = document.createElement('a');
+      a.href = url;
+      a.target = '_blank';
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    }
+  };
 
   // ── Notify helper ──
   const showNotif = (type, message) => {
@@ -312,7 +397,10 @@ export default function App() {
         }
         let qNo = Array.isArray(item) ? (item[4] ? String(item[4]).trim() : '') : (item.questionnaireNo || item.QuestionnaireNo || '');
         if (['QuestionnaireNo','เลขชุด','Questionnaire No.'].includes(qNo)) return;
-        const key = qNo ? String(qNo).replace(/\//g,'_') : `NO_ID_${Math.random()}`;
+        
+        let cleanQNo = String(qNo).trim();
+        let isBlankId = !cleanQNo || cleanQNo === '-' || cleanQNo.toUpperCase() === 'N/A';
+        const key = isBlankId ? `NO_ID_${Math.random()}` : cleanQNo.replace(/\//g,'_');
         uniqueMap.set(key, item);
       });
       const uniqueData = Array.from(uniqueMap.values());
@@ -331,7 +419,7 @@ export default function App() {
           };
           if (Array.isArray(item)) {
             const rawQNo = item[4] ? String(item[4]).trim().replace(/\//g,'_') : '';
-            docId = (rawQNo && rawQNo !== '-' && rawQNo !== 'N/A') ? rawQNo : doc(collection(db,"audit_cases")).id;
+            docId = (rawQNo && rawQNo !== '-' && rawQNo.toUpperCase() !== 'N/A') ? rawQNo : doc(collection(db,"audit_cases")).id;
             const evals = Array(13).fill(0).map((_,i) => ({ label:`Criteria ${i+1}`, value: String(item[15+i]||'-') }));
             norm = {
               month: item[2]||'N/A', date: item[3] ? String(item[3]).split('T')[0] : new Date().toISOString().split('T')[0],
@@ -343,7 +431,7 @@ export default function App() {
             };
           } else {
             const rawQNo = (getVal(item,['questionnaireNo','QuestionnaireNo'])||'').trim().replace(/\//g,'_');
-            docId = (rawQNo && rawQNo !== '-' && rawQNo !== 'N/A') ? rawQNo : doc(collection(db,"audit_cases")).id;
+            docId = (rawQNo && rawQNo !== '-' && rawQNo.toUpperCase() !== 'N/A') ? rawQNo : doc(collection(db,"audit_cases")).id;
             const evals = Array.isArray(item.evaluations) ? item.evaluations : Array(13).fill(0).map((_,i) => ({
               label:`Criteria ${i+1}`, value: String(item[`P${i+1}`]||item[`Criteria ${i+1}`]||'-')
             }));
@@ -666,6 +754,126 @@ export default function App() {
         </div>
       )}
 
+      {/* ── HOTSHEET MODAL ── */}
+      {showHotsheetModal && (
+        <div className="fixed inset-0 z-[150] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white w-full max-w-4xl rounded-3xl shadow-2xl overflow-hidden flex flex-col h-[85vh]">
+            
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 bg-slate-50 shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-orange-100 border border-orange-200 flex items-center justify-center">
+                  <FolderOpen size={20} className="text-orange-600"/>
+                </div>
+                <div>
+                  <h3 className="font-black text-slate-800 text-lg tracking-tight">Hotsheet Download</h3>
+                  <div className="text-[10px] font-bold text-slate-500 flex items-center gap-1.5 mt-0.5 uppercase tracking-wide">
+                    {hotsheetPath.split('/').map((p, i, arr) => (
+                      <span key={i} className="flex items-center gap-1.5">
+                        {i > 0 && <ChevronRight size={10} className="text-slate-300"/>}
+                        <span className={`px-1.5 py-0.5 rounded ${i === arr.length - 1 ? 'bg-slate-200 text-slate-700' : 'cursor-pointer hover:bg-orange-100 hover:text-orange-600 transition'}`}
+                          onClick={() => setHotsheetPath(arr.slice(0, i + 1).join('/'))}>
+                          {p}
+                        </span>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <button onClick={() => setShowHotsheetModal(false)} className="p-2 hover:bg-rose-100 hover:text-rose-600 rounded-xl transition text-slate-400">
+                <X size={20}/>
+              </button>
+            </div>
+
+            {/* Toolbar (Back & Filter) */}
+            <div className="px-6 py-3 border-b border-slate-100 flex items-center justify-between bg-white shrink-0 h-14">
+              {hotsheetPath !== 'Hotsheet' ? (
+                <button onClick={() => {
+                  const parts = hotsheetPath.split('/');
+                  parts.pop();
+                  setHotsheetPath(parts.join('/'));
+                }} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-black text-slate-500 hover:bg-slate-100 hover:text-slate-700 rounded-lg transition uppercase border border-slate-200">
+                  <ChevronLeft size={14}/> Back
+                </button>
+              ) : <div/>}
+
+              {hotsheetAvailableMonths.length > 0 && (
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 border border-indigo-100 rounded-lg">
+                    <Calendar size={13} className="text-indigo-500"/>
+                    <select value={selectedHotsheetMonth} onChange={e => setSelectedHotsheetMonth(e.target.value)}
+                      className="bg-transparent text-[11px] font-black text-indigo-700 outline-none cursor-pointer uppercase tracking-wider appearance-none pr-2">
+                      <option value="">ALL MONTHS</option>
+                      {hotsheetAvailableMonths.map(m => <option key={m} value={m}>เดือน {m}</option>)}
+                    </select>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Content Area */}
+            <div className="flex-1 overflow-y-auto p-6 bg-slate-50">
+              {hotsheetLoading ? (
+                <div className="flex flex-col items-center justify-center h-full text-slate-400 gap-3">
+                  <Loader2 size={30} className="animate-spin text-orange-500"/>
+                  <p className="text-xs font-black tracking-widest uppercase">Loading Storage...</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {/* Folders */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {hotsheetFolders.map(folder => (
+                      <div key={folder} onClick={() => setHotsheetPath(`${hotsheetPath}/${folder}`)}
+                        className="flex items-center gap-3 p-4 bg-white border border-slate-200 rounded-xl cursor-pointer hover:border-orange-300 hover:bg-orange-50 hover:shadow-md transition-all group">
+                        <FolderOpen size={24} className="text-orange-400 group-hover:text-orange-600"/>
+                        <span className="font-black text-slate-700 text-sm group-hover:text-orange-700">{folder}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {hotsheetFolders.length > 0 && filteredHotsheetFiles.length > 0 && <hr className="border-slate-200 my-6" />}
+
+                  {/* Files */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {filteredHotsheetFiles.map(file => {
+                      const match = file.name.match(/_(\d{2})(\d{2})(\d{4})\./);
+                      let dateLabel = '';
+                      if (match) dateLabel = `Date: ${match[2]}/${match[1]}/${match[3]}`;
+
+                      return (
+                        <div key={file.name} className="flex items-center justify-between p-4 bg-white border border-slate-200 rounded-xl hover:border-emerald-300 hover:shadow-md transition-all group">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="w-10 h-10 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center shrink-0">
+                              <FileSpreadsheet size={18} className="text-emerald-600"/>
+                            </div>
+                            <div className="truncate pr-4">
+                              <p className="font-bold text-slate-700 text-xs truncate group-hover:text-emerald-600 transition-colors" title={file.name}>{file.name}</p>
+                              <p className="text-[9px] text-slate-400 font-black tracking-wider uppercase mt-1">{dateLabel || 'Excel Document'}</p>
+                            </div>
+                          </div>
+                          <button onClick={() => downloadHotsheetFile(file.fullPath, file.url, file.name)}
+                            className="shrink-0 flex items-center justify-center w-10 h-10 bg-slate-50 hover:bg-emerald-500 hover:text-white text-slate-400 rounded-xl transition border border-slate-200 hover:border-emerald-500">
+                            <DownloadCloud size={16}/>
+                          </button>
+                        </div>
+                      )
+                    })}
+                  </div>
+
+                  {!hotsheetFolders.length && !filteredHotsheetFiles.length && (
+                    <div className="flex flex-col items-center justify-center py-20 text-slate-300 gap-2">
+                      <FolderOpen size={48} className="mb-2"/>
+                      <p className="font-black text-sm uppercase tracking-widest">โฟลเดอร์ว่างเปล่า</p>
+                      <p className="text-xs font-semibold">ไม่พบไฟล์ Hotsheet ในเงื่อนไขที่เลือก</p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Filter Sidebar */}
       <div className={`fixed inset-0 z-40 bg-slate-900/30 backdrop-blur-sm transition-opacity ${isFilterOpen?'opacity-100':'opacity-0 pointer-events-none'}`} onClick={()=>setIsFilterOpen(false)}/>
       <aside className={`fixed inset-y-0 right-0 z-50 w-80 bg-white shadow-2xl border-l border-slate-200 flex flex-col transform transition-transform duration-300 ${isFilterOpen?'translate-x-0':'translate-x-full'}`}>
@@ -719,6 +927,15 @@ export default function App() {
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
+            
+            {/* <-- ADDED HOTSHEET BUTTON --> */}
+            {userRole !== 'INV' && (
+              <button onClick={() => { setShowHotsheetModal(true); setHotsheetPath('Hotsheet'); }}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-black border bg-orange-50 border-orange-200 text-orange-600 hover:bg-orange-100 transition">
+                <FolderOpen size={13}/> Hotsheet
+              </button>
+            )}
+
             {['Admin','QC','Gallup'].includes(userRole) && (
               <button onClick={handleExportCSV} className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-black border bg-sky-50 border-sky-200 text-sky-600 hover:bg-sky-100 transition">
                 <Download size={13}/> Export CSV
