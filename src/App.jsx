@@ -630,7 +630,6 @@ export default function App() {
           {/* Desktop heading */}
           <div className="mb-8">
             <p className="text-[10px] font-black text-[#842327] uppercase tracking-widest mb-1">QC Dashboard</p>
-            <h2 className="text-2xl font-black text-[#2C3E50] tracking-tight">ยินดีต้อนรับ</h2>
           </div>
           <div className="bg-white border border-slate-200/80 rounded-3xl p-8 shadow-[0_20px_60px_rgba(0,0,0,0.07)]">
             <form onSubmit={async (e) => {
@@ -668,7 +667,7 @@ export default function App() {
                 </div>
               )}
               <button type="submit" className="w-full py-3.5 bg-gradient-to-r from-[#842327] via-[#D32F2F] to-[#842327] animate-gradient-x shimmer text-white rounded-xl font-black text-sm tracking-wider transition-all shadow-lg shadow-[#842327]/25 hover:shadow-[#842327]/40 hover:-translate-y-0.5 active:scale-[0.98]">
-                เข้าสู่ระบบ
+                Sign In
               </button>
             </form>
           </div>
