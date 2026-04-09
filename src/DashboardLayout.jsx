@@ -9,6 +9,14 @@ import { calculateCrosstab } from './dataProcessing.js';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import * as XLSX from 'xlsx';
 
+const ANIMATION_STYLES = `
+  @keyframes gradient-x { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+  .animate-gradient-x { background-size: 200% 200%; animation: gradient-x 4s ease infinite; }
+  @keyframes shimmer { 0% { transform: translateX(-150%) skewX(-15deg); } 100% { transform: translateX(150%) skewX(-15deg); } }
+  .shimmer { position: relative; overflow: hidden; }
+  .shimmer::after { content: ''; position: absolute; top: 0; left: 0; width: 50%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent); animation: shimmer 2.5s infinite; }
+`;
+
 // --- 1. กล่องตัวแปรที่สามารถลากได้ (Draggable) ---
 const DraggableVariable = ({ id, name }) => {
   const { attributes, listeners, setNodeRef, transform } = useDraggable({ id });
@@ -16,9 +24,9 @@ const DraggableVariable = ({ id, name }) => {
 
   return (
     <div ref={setNodeRef} style={style} {...listeners} {...attributes}
-         className="bg-neutral-900 border border-neutral-800 p-3 rounded-xl shadow-sm cursor-grab active:cursor-grabbing hover:border-red-500/50 hover:shadow-[0_4px_12px_rgba(239,68,68,0.15)] hover:-translate-y-0.5 transition-all duration-200 flex items-center gap-2 group">
-      <div className="w-1.5 h-1.5 rounded-full bg-neutral-700 group-hover:bg-red-500 transition-colors" />
-      <span className="text-xs font-bold text-neutral-400 truncate group-hover:text-white transition-colors">{name}</span>
+         className="bg-white border border-slate-200 p-3 rounded-xl shadow-sm cursor-grab active:cursor-grabbing hover:border-[#D32F2F]/50 hover:shadow-lg hover:shadow-[#842327]/10 hover:-translate-y-1 transition-all duration-300 flex items-center gap-2 group">
+      <div className="w-1.5 h-1.5 rounded-full bg-slate-300 group-hover:bg-[#D32F2F] transition-colors" />
+      <span className="text-xs font-bold text-[#85929E] truncate group-hover:text-[#2C3E50] transition-colors">{name}</span>
     </div>
   );
 };
@@ -26,22 +34,22 @@ const DraggableVariable = ({ id, name }) => {
 // --- 2. พื้นที่สำหรับวางตัวแปร (Droppable Area) ---
 const DroppableArea = ({ id, title, items, onRemoveItem, children }) => {
   const { isOver, setNodeRef } = useDroppable({ id });
-  const bg = isOver ? 'bg-red-500/10 border-red-500/50 shadow-[inset_0_0_20px_rgba(239,68,68,0.05)]' : 'bg-neutral-900/40 border-neutral-700/50 hover:border-neutral-600/60 hover:bg-neutral-800/40';
+  const bg = isOver ? 'bg-gradient-to-br from-[#D32F2F]/10 to-[#842327]/5 border-[#D32F2F]/50 shadow-[inset_0_0_20px_rgba(211,47,47,0.1)] animate-pulse' : 'bg-slate-50 border-slate-200 hover:border-[#842327]/30 hover:bg-white shadow-inner transition-all duration-300';
 
   return (
     <div ref={setNodeRef} className={`border-2 border-dashed rounded-2xl p-5 min-h-[140px] transition-all flex flex-col ${bg}`}>
-      <h3 className="font-black text-neutral-500 text-[10px] uppercase tracking-widest mb-3">{title}</h3>
+      <h3 className="font-black text-[#85929E] text-[10px] uppercase tracking-widest mb-3">{title}</h3>
       <div className="flex-1 flex flex-wrap content-start gap-2">
         {items.length === 0 ? (
-          <div className="w-full h-full flex flex-col items-center justify-center text-neutral-600">
+          <div className="w-full h-full flex flex-col items-center justify-center text-slate-400">
             <p className="text-xs font-bold">ลากตัวแปรมาวางที่นี่</p>
           </div>
         ) : (
           items.map((item, index) => (
-            <div key={item} className="bg-neutral-800 border border-neutral-700 text-red-400 pl-2.5 pr-1.5 py-1.5 rounded-lg shadow-sm text-xs font-black flex items-center gap-1.5 animate-in zoom-in duration-200 group">
-              <span className="text-[9px] bg-neutral-900 px-1.5 py-0.5 rounded-md text-red-500">{index + 1}</span>
+            <div key={item} className="bg-white border border-slate-200 text-[#842327] pl-2.5 pr-1.5 py-1.5 rounded-lg shadow-sm text-xs font-black flex items-center gap-1.5 animate-in zoom-in duration-200 group">
+              <span className="text-[9px] bg-[#F8F9FA] px-1.5 py-0.5 rounded-md text-[#D32F2F] border border-slate-100">{index + 1}</span>
               {item}
-              <button onClick={(e) => { e.stopPropagation(); onRemoveItem(id, item); }} className="ml-1 p-0.5 text-red-500/70 hover:text-red-400 hover:bg-red-500/20 rounded-md transition-colors" title="ลบตัวแปร">
+              <button onClick={(e) => { e.stopPropagation(); onRemoveItem(id, item); }} className="ml-1 p-0.5 text-[#85929E] hover:text-[#DC3545] hover:bg-[#DC3545]/10 rounded-md transition-colors" title="ลบตัวแปร">
                 <X size={12} />
               </button>
             </div>
@@ -77,7 +85,7 @@ const CrosstabChart = ({ data }) => {
 // --- 3. Component สำหรับแสดงตาราง Crosstab ---
 const CrosstabTable = ({ data, rowVar, colVar }) => {
   if (!data) {
-    return <p className="text-neutral-500">เกิดข้อผิดพลาดในการประมวลผลข้อมูล</p>;
+    return <p className="text-[#85929E]">เกิดข้อผิดพลาดในการประมวลผลข้อมูล</p>;
   }
 
   const { rowCategories, colCategories, table, rowTotals, colTotals, totalCount, grandTotalAverage, pctType, aggType } = data;
@@ -85,42 +93,42 @@ const CrosstabTable = ({ data, rowVar, colVar }) => {
   return (
     <div className="w-full overflow-auto p-1">
       <table className="w-full text-xs border-separate border-spacing-0 min-w-max">
-        <thead className="sticky top-0 z-20 bg-neutral-900/90 backdrop-blur-md shadow-sm">
+        <thead className="sticky top-0 z-20 bg-white/90 backdrop-blur-md shadow-sm">
           <tr>
-            <th className="sticky left-0 z-30 px-6 py-3 text-left text-[10px] font-black text-neutral-400 uppercase tracking-widest border-b border-r border-neutral-800 bg-neutral-950/95 backdrop-blur-md shadow-[2px_0_5px_-2px_rgba(0,0,0,0.8)]">{`${rowVar} \\ ${colVar}`}</th>
+            <th className="sticky left-0 z-30 px-6 py-3 text-left text-[10px] font-black text-[#85929E] uppercase tracking-widest border-b border-r border-slate-200 bg-[#F8F9FA]/95 backdrop-blur-md shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">{`${rowVar} \\ ${colVar}`}</th>
             {colCategories.map(c => (
-              <th key={c} className="px-3 py-3 text-center text-[10px] font-black border-b border-neutral-800 bg-neutral-900/95 backdrop-blur-md max-w-[120px] text-neutral-300">{c}</th>
+              <th key={c} className="px-3 py-3 text-center text-[10px] font-black border-b border-slate-200 bg-white/95 backdrop-blur-md max-w-[120px] text-[#2C3E50]">{c}</th>
             ))}
-            <th className="px-6 py-3 text-center text-[10px] font-black text-neutral-400 uppercase tracking-widest border-b border-neutral-800 bg-neutral-800/95 backdrop-blur-md min-w-[80px]">Total</th>
+            <th className="px-6 py-3 text-center text-[10px] font-black text-[#85929E] uppercase tracking-widest border-b border-slate-200 bg-[#F8F9FA]/95 backdrop-blur-md min-w-[80px]">Total</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-neutral-800/50">
+        <tbody className="divide-y divide-slate-100">
           {rowCategories.map(r => (
-            <tr key={r} className="hover:bg-neutral-800/40 transition-colors group">
-              <td className="sticky left-0 z-10 px-6 py-3.5 font-bold text-[13px] text-neutral-300 border-r border-neutral-800 bg-neutral-900 group-hover:bg-neutral-800/80 transition-colors shadow-[2px_0_5px_-2px_rgba(0,0,0,0.5)]">{r}</td>
+            <tr key={r} className="hover:bg-slate-50 transition-colors group">
+              <td className="sticky left-0 z-10 px-6 py-3.5 font-bold text-[13px] text-[#2C3E50] border-r border-slate-200 bg-white group-hover:bg-slate-50 transition-colors shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">{r}</td>
               {colCategories.map(c => (
-                <td key={c} className="px-3 py-3.5 text-center border-r border-neutral-800/50">
-                  <div className="font-black text-sm text-neutral-200">{aggType === 'average' ? table[r][c].average : table[r][c].count}</div>
-                  {aggType === 'count' && <div className="text-[10px] text-neutral-500">({table[r][c].percentage}%)</div>}
+                <td key={c} className="px-3 py-3.5 text-center border-r border-slate-100">
+                  <div className="font-black text-sm text-[#2C3E50]">{aggType === 'average' ? table[r][c].average : table[r][c].count}</div>
+                  {aggType === 'count' && <div className="text-[10px] text-[#85929E]">({table[r][c].percentage}%)</div>}
                 </td>
               ))}
-              <td className="px-6 py-3.5 text-center bg-neutral-950 border-l border-neutral-800">
-                <div className="font-black text-neutral-200">{aggType === 'average' ? rowTotals[r].average : rowTotals[r].count}</div>
-                {aggType === 'count' && <div className="text-[10px] text-neutral-500">{pctType==='row' ? '(100.0%)' : `(${totalCount > 0 ? ((rowTotals[r].count / totalCount) * 100).toFixed(1) : 0}%)`}</div>}
+              <td className="px-6 py-3.5 text-center bg-[#F8F9FA] border-l border-slate-200">
+                <div className="font-black text-[#2C3E50]">{aggType === 'average' ? rowTotals[r].average : rowTotals[r].count}</div>
+                {aggType === 'count' && <div className="text-[10px] text-[#85929E]">{pctType==='row' ? '(100.0%)' : `(${totalCount > 0 ? ((rowTotals[r].count / totalCount) * 100).toFixed(1) : 0}%)`}</div>}
               </td>
             </tr>
           ))}
-          <tr className="bg-neutral-800 border-t-2 border-neutral-700 font-black">
-            <td className="sticky left-0 z-10 px-6 py-4 text-red-500 font-black text-[13px] uppercase border-r border-neutral-700 bg-neutral-800 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.5)]">Total</td>
+          <tr className="bg-slate-100 border-t-2 border-slate-200 font-black">
+            <td className="sticky left-0 z-10 px-6 py-4 text-[#842327] font-black text-[13px] uppercase border-r border-slate-200 bg-slate-100 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">Total</td>
             {colCategories.map(c => (
-              <td key={c} className="px-3 py-4 text-center border-r border-neutral-700 text-neutral-200">
-                <div className="font-black text-sm text-neutral-200">{aggType === 'average' ? colTotals[c].average : colTotals[c].count}</div>
-                {aggType === 'count' && <div className="text-[10px] text-neutral-400">{pctType==='col' ? '(100.0%)' : `(${totalCount > 0 ? ((colTotals[c].count / totalCount) * 100).toFixed(1) : 0}%)`}</div>}
+              <td key={c} className="px-3 py-4 text-center border-r border-slate-200 text-[#2C3E50]">
+                <div className="font-black text-sm text-[#2C3E50]">{aggType === 'average' ? colTotals[c].average : colTotals[c].count}</div>
+                {aggType === 'count' && <div className="text-[10px] text-[#85929E]">{pctType==='col' ? '(100.0%)' : `(${totalCount > 0 ? ((colTotals[c].count / totalCount) * 100).toFixed(1) : 0}%)`}</div>}
               </td>
             ))}
-            <td className="px-6 py-4 text-center bg-neutral-900 border-l border-neutral-700">
-              <div className="font-black text-red-500 text-base">{aggType === 'average' ? grandTotalAverage : totalCount}</div>
-              {aggType === 'count' && <div className="text-[10px] text-neutral-400">(100.0%)</div>}
+            <td className="px-6 py-4 text-center bg-[#F8F9FA] border-l border-slate-200">
+              <div className="font-black text-[#842327] text-base">{aggType === 'average' ? grandTotalAverage : totalCount}</div>
+              {aggType === 'count' && <div className="text-[10px] text-[#85929E]">(100.0%)</div>}
             </td>
           </tr>
         </tbody>
@@ -154,22 +162,22 @@ const SavedViewCard = ({ config, rawData, onClose }) => {
   }, [config, rawData]);
 
   return (
-    <div className="bg-neutral-900 border border-neutral-800 rounded-2xl shadow-xl flex flex-col h-[450px] animate-in zoom-in-95 duration-300">
-      <div className="px-5 py-3 border-b border-neutral-800 flex items-center justify-between bg-neutral-950 rounded-t-2xl shrink-0">
-        <h4 className="font-black text-neutral-200 text-sm truncate flex-1 pr-4" title={config.name}>{config.name}</h4>
-        <button onClick={() => onClose(config.id)} className="text-neutral-500 hover:text-red-400 hover:bg-neutral-900 p-1.5 rounded-lg transition-colors shrink-0" title="ซ่อนมุมมองนี้">
+    <div className="bg-white border border-slate-200 rounded-2xl shadow-lg flex flex-col h-[450px] animate-in zoom-in-95 duration-300">
+      <div className="px-5 py-3 border-b border-slate-100 flex items-center justify-between bg-[#F8F9FA] rounded-t-2xl shrink-0">
+        <h4 className="font-black text-[#2C3E50] text-sm truncate flex-1 pr-4" title={config.name}>{config.name}</h4>
+        <button onClick={() => onClose(config.id)} className="text-[#85929E] hover:text-[#DC3545] hover:bg-rose-50 p-1.5 rounded-lg transition-colors shrink-0" title="ซ่อนมุมมองนี้">
           <X size={16} />
         </button>
       </div>
       <div className="flex-1 p-4 overflow-auto flex flex-col relative">
         {isProcessing ? (
-          <Loader2 className="animate-spin m-auto text-red-500" size={32} />
+          <Loader2 className="animate-spin m-auto text-[#842327]" size={32} />
         ) : crosstabData ? (
           config.viewMode === 'chart' 
             ? <CrosstabChart data={crosstabData} /> 
             : <CrosstabTable data={crosstabData} rowVar={config.rowVars.join(' ❯ ')} colVar={config.colVars.join(' ❯ ')} />
         ) : (
-          <p className="m-auto text-sm font-bold text-red-400">เกิดข้อผิดพลาดในการประมวลผล</p>
+          <p className="m-auto text-sm font-bold text-[#DC3545]">เกิดข้อผิดพลาดในการประมวลผล</p>
         )}
       </div>
     </div>
@@ -511,16 +519,17 @@ const DashboardLayout = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black text-neutral-300 font-sans p-4 md:p-6 flex flex-col overflow-y-auto selection:bg-red-500/30 selection:text-white">
+    <div className="min-h-screen bg-[#F8F9FA] text-[#2C3E50] font-sans p-4 md:p-6 flex flex-col overflow-y-auto selection:bg-[#842327]/20 selection:text-[#842327]">
+      <style>{ANIMATION_STYLES}</style>
       
       {/* Global Notification */}
       <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[200] flex flex-col gap-2 pointer-events-none">
         {notifications.map(notif => (
           <div key={notif.id} className={`pointer-events-auto flex items-center gap-3 px-5 py-3 rounded-2xl shadow-2xl border backdrop-blur-xl transition-all animate-in slide-in-from-bottom-2 fade-in duration-300
-            ${notif.type==='error' ? 'bg-red-950/90 border-red-900/50 text-red-200' : 'bg-neutral-800/90 border-neutral-700/50 text-white'}`}>
-            {notif.type==='error' ? <AlertCircle size={16}/> : <CheckCircle size={16} className="text-red-500"/>}
+            ${notif.type==='error' ? 'bg-[#DC3545]/95 border-[#DC3545]/50 text-white' : 'bg-[#2C3E50]/95 border-[#2C3E50]/50 text-white'}`}>
+            {notif.type==='error' ? <AlertCircle size={16}/> : <CheckCircle size={16} className="text-[#28A745]"/>}
             <span className="text-sm font-semibold">{notif.message}</span>
-            <button onClick={()=>setNotifications(p=>p.filter(n=>n.id!==notif.id))} className="ml-2 opacity-50 hover:opacity-100 text-neutral-400"><X size={13}/></button>
+            <button onClick={()=>setNotifications(p=>p.filter(n=>n.id!==notif.id))} className="ml-2 opacity-50 hover:opacity-100 text-white/70"><X size={13}/></button>
           </div>
         ))}
       </div>
@@ -530,41 +539,45 @@ const DashboardLayout = () => {
       <div className="max-w-screen-2xl mx-auto w-full space-y-5 flex-1 flex flex-col">
         
         {/* Header */}
-        <header className="sticky top-0 z-40 bg-neutral-900/80 backdrop-blur-xl rounded-2xl border border-neutral-800 shadow-xl px-6 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shrink-0">
+        <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-xl rounded-2xl border border-slate-200 shadow-sm px-6 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shrink-0">
           <div className="flex items-center gap-4">
-            <button onClick={() => navigate('/')} className="p-2 hover:bg-neutral-800 text-neutral-400 rounded-xl transition">
+            <button onClick={() => navigate('/')} className="p-2 hover:bg-slate-100 text-[#85929E] rounded-xl transition">
               <ArrowLeft size={18} />
             </button>
-            <div className="hidden sm:block w-px h-8 bg-neutral-800" />
+            <div className="hidden sm:block w-px h-8 bg-slate-200" />
             <div>
-              <h1 className="font-black text-white text-lg tracking-tight flex items-center gap-2">
+              <h1 className="font-black text-[#2C3E50] text-lg tracking-tight flex items-center gap-2">
                 {activeProjectName || 'Interview Data Dashboard'}
               </h1>
-              <p className="text-[10px] text-neutral-500 font-semibold mt-0.5 uppercase tracking-widest">
+              <p className="text-[10px] text-[#85929E] font-semibold mt-0.5 uppercase tracking-widest">
                 ลากตัวแปรเพื่อสร้าง Crosstab
               </p>
             </div>
           </div>
           
           <div className="flex flex-wrap items-center gap-2">
-            <button onClick={() => fileInputRef.current?.click()} disabled={isUploading || isLoading} className="flex items-center gap-1.5 px-4 py-2 bg-neutral-950 text-red-400 border border-neutral-800 hover:border-red-500/50 hover:bg-red-500/10 rounded-xl shadow-sm text-xs font-black transition disabled:opacity-50">
-              <FileUp size={13} className={isUploading ? "animate-bounce" : ""} />
-              {isUploading ? `กำลังอัปโหลด ${uploadProgress}%` : 'อัปโหลด Excel'}
-            </button>
-            <button onClick={fetchData} disabled={isLoading} className="flex items-center gap-1.5 px-4 py-2 bg-neutral-950 text-red-400 border border-neutral-800 hover:border-red-500/50 hover:bg-red-500/10 rounded-xl shadow-sm text-xs font-black transition disabled:opacity-50">
-              <RefreshCw size={13} className={isLoading ? "animate-spin" : ""} />
-              อัปเดตข้อมูล
-            </button>
-            <button onClick={handleSaveView} className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white rounded-xl shadow-lg text-xs font-black transition-all hover:-translate-y-0.5 shadow-red-900/30 border border-red-500/50">
+            {['admin', 'qc'].includes(String(userRole).toLowerCase()) && (
+              <>
+                <button onClick={() => fileInputRef.current?.click()} disabled={isUploading || isLoading} className="flex items-center gap-1.5 px-4 py-2 bg-white text-[#842327] border border-slate-200 hover:border-[#842327]/50 hover:bg-[#842327]/10 rounded-xl shadow-sm text-xs font-black transition disabled:opacity-50">
+                  <FileUp size={13} className={isUploading ? "animate-bounce" : ""} />
+                  {isUploading ? `กำลังอัปโหลด ${uploadProgress}%` : 'อัปโหลด Excel'}
+                </button>
+                <button onClick={fetchData} disabled={isLoading} className="flex items-center gap-1.5 px-4 py-2 bg-white text-[#842327] border border-slate-200 hover:border-[#842327]/50 hover:bg-[#842327]/10 rounded-xl shadow-sm text-xs font-black transition disabled:opacity-50">
+                  <RefreshCw size={13} className={isLoading ? "animate-spin" : ""} />
+                  อัปเดตข้อมูล
+                </button>
+              </>
+            )}
+            <button onClick={handleSaveView} className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-[#842327] via-[#D32F2F] to-[#842327] animate-gradient-x shimmer text-white rounded-xl shadow-lg shadow-[#842327]/20 text-xs font-black transition-all hover:-translate-y-1 border border-transparent">
               <Save size={13} />
               บันทึกมุมมอง
             </button>
-            <button onClick={() => { setRowVars([]); setColVars([]); setFilterVars([]); setValueVars([]); setFilterValue([]); setSelectedViewIds([]); }} className="flex items-center gap-1.5 px-4 py-2 bg-black text-neutral-500 border border-neutral-800 hover:text-white hover:bg-neutral-800 rounded-xl shadow-sm text-xs font-black transition">
+            <button onClick={() => { setRowVars([]); setColVars([]); setFilterVars([]); setValueVars([]); setFilterValue([]); setSelectedViewIds([]); }} className="flex items-center gap-1.5 px-4 py-2 bg-slate-50 text-[#85929E] border border-slate-200 hover:text-[#2C3E50] hover:bg-slate-100 rounded-xl shadow-sm text-xs font-black transition">
               <X size={13} />
               เคลียร์กระดาน
             </button>
             {userRole === 'Admin' && (
-              <button onClick={() => navigate('/admin')} className="flex items-center gap-1.5 px-4 py-2 bg-neutral-800 hover:bg-neutral-700 text-white border border-neutral-700 rounded-xl shadow-sm text-xs font-black transition">
+              <button onClick={() => navigate('/admin')} className="flex items-center gap-1.5 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl shadow-sm text-xs font-black transition">
                 <Shield size={13} />
                 จัดการระบบ
               </button>
@@ -576,45 +589,45 @@ const DashboardLayout = () => {
         <div className="flex flex-col lg:flex-row gap-5 min-h-[500px]">
           
           {/* Sidebar สำหรับเลือกตัวแปร */}
-          <div className="w-full lg:w-72 bg-neutral-900 border border-neutral-800 p-5 rounded-2xl shadow-xl overflow-y-auto flex flex-col shrink-0 max-h-[800px]">
-            <h2 className="font-black text-white text-sm flex items-center justify-between mb-3 uppercase tracking-wide">
+          <div className="w-full lg:w-72 bg-white border border-slate-200 p-5 rounded-2xl shadow-sm overflow-y-auto flex flex-col shrink-0 max-h-[800px]">
+            <h2 className="font-black text-[#2C3E50] text-sm flex items-center justify-between mb-3 uppercase tracking-wide">
               <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-red-500/10 flex items-center justify-center border border-red-500/20"><BarChart2 size={13} className="text-red-500"/></div>
+                <div className="w-7 h-7 rounded-lg bg-[#842327]/10 flex items-center justify-center border border-[#842327]/20"><BarChart2 size={13} className="text-[#842327]"/></div>
                 รายการตัวแปร
               </div>
-              {variables.length > 0 && <span className="text-[10px] font-bold text-neutral-400 bg-neutral-800 border border-neutral-700 px-2 py-0.5 rounded-full">{variables.length}</span>}
+              {variables.length > 0 && <span className="text-[10px] font-bold text-[#85929E] bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-full">{variables.length}</span>}
             </h2>
             
             <div className="mb-4 relative shrink-0">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500" size={14} />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#85929E]" size={14} />
               <input
                 type="text"
                 placeholder="ค้นหาตัวแปร..."
                 value={variableSearch}
                 onChange={e => setVariableSearch(e.target.value)}
-                className="w-full pl-9 pr-3 py-2.5 bg-black/50 border border-neutral-800 rounded-xl text-xs font-semibold outline-none focus:border-red-500/50 focus:ring-1 focus:ring-red-500/50 text-white placeholder:text-neutral-600 transition-all"
+                className="w-full pl-9 pr-3 py-2.5 bg-[#F8F9FA] border border-slate-200 rounded-xl text-xs font-semibold outline-none focus:border-[#842327] focus:ring-1 focus:ring-[#842327]/50 text-[#2C3E50] placeholder:text-[#85929E] transition-all"
               />
             </div>
             
             {/* โหมดการจัดเรียงตัวแปร */}
-            <div className="flex bg-black p-1 rounded-xl border border-neutral-800 mb-3 shrink-0">
-              <button onClick={() => setSortMode('grouped')} className={`flex-1 px-2 py-1.5 rounded-lg text-[10px] font-black transition ${sortMode === 'grouped' ? 'bg-neutral-800 text-red-400 shadow-sm' : 'text-neutral-500 hover:text-neutral-300'}`}>หมวดหมู่</button>
-              <button onClick={() => setSortMode('az')} className={`flex-1 px-2 py-1.5 rounded-lg text-[10px] font-black transition ${sortMode === 'az' ? 'bg-neutral-800 text-red-400 shadow-sm' : 'text-neutral-500 hover:text-neutral-300'}`}>A-Z</button>
-              <button onClick={() => setSortMode('original')} className={`flex-1 px-2 py-1.5 rounded-lg text-[10px] font-black transition ${sortMode === 'original' ? 'bg-neutral-800 text-red-400 shadow-sm' : 'text-neutral-500 hover:text-neutral-300'}`}>ดั้งเดิม</button>
+            <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200 mb-3 shrink-0">
+              <button onClick={() => setSortMode('grouped')} className={`flex-1 px-2 py-1.5 rounded-lg text-[10px] font-black transition ${sortMode === 'grouped' ? 'bg-white text-[#842327] shadow-sm' : 'text-[#85929E] hover:text-[#2C3E50]'}`}>หมวดหมู่</button>
+              <button onClick={() => setSortMode('az')} className={`flex-1 px-2 py-1.5 rounded-lg text-[10px] font-black transition ${sortMode === 'az' ? 'bg-white text-[#842327] shadow-sm' : 'text-[#85929E] hover:text-[#2C3E50]'}`}>A-Z</button>
+              <button onClick={() => setSortMode('original')} className={`flex-1 px-2 py-1.5 rounded-lg text-[10px] font-black transition ${sortMode === 'original' ? 'bg-white text-[#842327] shadow-sm' : 'text-[#85929E] hover:text-[#2C3E50]'}`}>ดั้งเดิม</button>
             </div>
 
             <div className="flex-1 overflow-y-auto pr-2 space-y-2">
               {isLoading ? (
                 <div className="flex flex-col items-center justify-center py-10">
-                  <Loader2 size={24} className="text-red-500 animate-spin mb-2" />
-                  <p className="text-xs font-bold text-neutral-500">กำลังโหลด...</p>
+                  <Loader2 size={24} className="text-[#842327] animate-spin mb-2" />
+                  <p className="text-xs font-bold text-[#85929E]">กำลังโหลด...</p>
                 </div>
               ) : error ? (
-                <p className="text-xs font-bold text-red-400 bg-red-950/30 p-3 rounded-lg border border-red-900/50">{error}</p>
+                <p className="text-xs font-bold text-[#DC3545] bg-[#DC3545]/10 p-3 rounded-lg border border-[#DC3545]/20">{error}</p>
               ) : (
                 Object.entries(categorizedVariables).map(([groupName, vars]) => (
                   <div key={groupName} className="mb-4 last:mb-0">
-                    {sortMode === 'grouped' && <h4 className="text-[10px] font-black text-neutral-500 uppercase tracking-widest mb-2 px-1">{groupName}</h4>}
+                    {sortMode === 'grouped' && <h4 className="text-[10px] font-black text-[#85929E] uppercase tracking-widest mb-2 px-1">{groupName}</h4>}
                     <div className="space-y-1.5">
                       {vars.map(v => (
                         <DraggableVariable key={v} id={v} name={v} />
@@ -626,29 +639,29 @@ const DashboardLayout = () => {
             </div>
 
             {/* --- พื้นที่แสดงรายการมุมมองที่บันทึกไว้ --- */}
-            <div className="mt-6 pt-5 border-t border-neutral-800 flex-1 flex flex-col min-h-[200px]">
-              <h2 className="font-black text-white text-sm flex items-center justify-between gap-2 mb-3 uppercase tracking-wide">
+            <div className="mt-6 pt-5 border-t border-slate-200 flex-1 flex flex-col min-h-[200px]">
+              <h2 className="font-black text-[#2C3E50] text-sm flex items-center justify-between gap-2 mb-3 uppercase tracking-wide">
                 <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center"><Save size={13} className="text-emerald-500"/></div>
+                  <div className="w-7 h-7 rounded-lg bg-[#28A745]/10 border border-[#28A745]/20 flex items-center justify-center"><Save size={13} className="text-[#28A745]"/></div>
                   มุมมองที่บันทึก
                 </div>
-                <span className="text-[10px] font-bold text-neutral-400 bg-neutral-800 border border-neutral-700 px-2 py-0.5 rounded-full">{savedViews.length}</span>
+                <span className="text-[10px] font-bold text-[#85929E] bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-full">{savedViews.length}</span>
               </h2>
               <div className="flex-1 overflow-y-auto pr-2 space-y-2">
                 {isFetchingViews ? (
-                  <div className="flex justify-center py-4"><Loader2 size={20} className="text-emerald-500 animate-spin"/></div>
+                  <div className="flex justify-center py-4"><Loader2 size={20} className="text-[#28A745] animate-spin"/></div>
                 ) : savedViews.length === 0 ? (
-                  <p className="text-xs font-semibold text-neutral-500 text-center py-4 italic">ยังไม่มีมุมมองที่ถูกบันทึกไว้</p>
+                  <p className="text-xs font-semibold text-[#85929E] text-center py-4 italic">ยังไม่มีมุมมองที่ถูกบันทึกไว้</p>
                 ) : (
                   savedViews.map(view => {
                     const isSelected = selectedViewIds.includes(view.id);
                     return (
-                      <div key={view.id} className={`flex items-center justify-between p-2 rounded-xl border transition-all ${isSelected ? 'bg-emerald-950/30 border-emerald-500/50' : 'bg-neutral-800/50 border-neutral-700 hover:border-emerald-500/30'}`}>
+                      <div key={view.id} className={`flex items-center justify-between p-2 rounded-xl border transition-all ${isSelected ? 'bg-[#28A745]/10 border-[#28A745]/50' : 'bg-white border-slate-200 hover:border-[#28A745]/30'}`}>
                         <button onClick={() => isSelected ? setSelectedViewIds(selectedViewIds.filter(id => id !== view.id)) : setSelectedViewIds([...selectedViewIds, view.id])} className="flex-1 flex items-center gap-2 text-left truncate pr-2">
-                          {isSelected ? <CheckSquare size={14} className="text-emerald-500 shrink-0" /> : <Square size={14} className="text-neutral-500 shrink-0" />}
-                          <span className={`text-xs font-bold truncate ${isSelected ? 'text-emerald-400' : 'text-neutral-300'}`}>{view.name}</span>
+                          {isSelected ? <CheckSquare size={14} className="text-[#28A745] shrink-0" /> : <Square size={14} className="text-[#85929E] shrink-0" />}
+                          <span className={`text-xs font-bold truncate ${isSelected ? 'text-[#28A745]' : 'text-[#2C3E50]'}`}>{view.name}</span>
                         </button>
-                        <button onClick={() => handleDeleteSavedView(view.id, view.name)} className="p-1.5 text-neutral-500 hover:text-red-400 hover:bg-neutral-900 rounded-lg transition-colors shrink-0" title="ลบทิ้ง">
+                        <button onClick={() => handleDeleteSavedView(view.id, view.name)} className="p-1.5 text-[#85929E] hover:text-[#DC3545] hover:bg-rose-50 rounded-lg transition-colors shrink-0" title="ลบทิ้ง">
                           <Trash2 size={13} />
                         </button>
                       </div>
@@ -669,10 +682,10 @@ const DashboardLayout = () => {
                 {filterVars.length > 0 && filterOptions.length > 0 && (
                   <div className="mt-3 w-full animate-in fade-in duration-300 flex flex-col">
                     <div className="flex items-center justify-between mb-2 px-1">
-                      <span className="text-[10px] font-bold text-neutral-500">เลือกข้อมูล ({filterValue.length})</span>
+                      <span className="text-[10px] font-bold text-[#85929E]">เลือกข้อมูล ({filterValue.length})</span>
                       <div className="flex gap-2">
-                        <button onClick={() => setFilterValue(filterOptions.map(String))} className="text-[10px] font-bold text-red-400 hover:text-red-300 transition-colors">ทั้งหมด</button>
-                        <button onClick={() => setFilterValue([])} className="text-[10px] font-bold text-neutral-500 hover:text-neutral-300 transition-colors">ล้าง</button>
+                        <button onClick={() => setFilterValue(filterOptions.map(String))} className="text-[10px] font-bold text-[#842327] hover:text-[#D32F2F] transition-colors">ทั้งหมด</button>
+                        <button onClick={() => setFilterValue([])} className="text-[10px] font-bold text-[#85929E] hover:text-[#2C3E50] transition-colors">ล้าง</button>
                       </div>
                     </div>
                     <div className="max-h-[140px] overflow-y-auto space-y-1 pr-1 custom-scrollbar">
@@ -682,8 +695,8 @@ const DashboardLayout = () => {
                         return (
                           <div key={opt} onClick={() => {
                             setFilterValue(prev => prev.includes(valStr) ? prev.filter(v => v !== valStr) : [...prev, valStr]);
-                          }} className={`flex items-center gap-2 p-2 rounded-lg cursor-pointer text-[11px] font-semibold transition-all ${isSelected ? 'bg-red-950/30 text-red-400 border border-red-900/50' : 'hover:bg-neutral-800 text-neutral-400 border border-transparent hover:border-neutral-700'}`}>
-                            {isSelected ? <CheckSquare size={14} className="shrink-0 text-red-500" /> : <Square size={14} className="shrink-0 text-neutral-600" />}
+                          }} className={`flex items-center gap-2 p-2 rounded-lg cursor-pointer text-[11px] font-semibold transition-all ${isSelected ? 'bg-[#842327]/10 text-[#842327] border border-[#842327]/20' : 'hover:bg-slate-100 text-[#85929E] border border-transparent hover:border-slate-200'}`}>
+                            {isSelected ? <CheckSquare size={14} className="shrink-0 text-[#842327]" /> : <Square size={14} className="shrink-0 text-slate-400" />}
                             <span className="truncate" title={valStr}>{valStr}</span>
                           </div>
                         );
@@ -695,25 +708,25 @@ const DashboardLayout = () => {
             </div>
 
             {/* กล่องสำหรับวาดตาราง Crosstab หรือ กราฟ */}
-            <div className="flex-1 bg-neutral-900 border border-neutral-800 rounded-2xl shadow-xl p-6 flex flex-col overflow-hidden">
-              <div className="flex items-center justify-between mb-4 shrink-0 pb-3 border-b border-neutral-800">
-                <h3 className="font-black text-white text-sm flex items-center gap-2 uppercase tracking-wide">
-                  <div className="w-7 h-7 rounded-lg bg-neutral-800 flex items-center justify-center border border-neutral-700">
-                    {viewMode === 'chart' ? <PieChart size={13} className="text-neutral-400"/> : <Table2 size={13} className="text-neutral-400"/>}
+            <div className="flex-1 bg-white border border-slate-200 rounded-2xl shadow-md p-6 flex flex-col overflow-hidden">
+              <div className="flex items-center justify-between mb-4 shrink-0 pb-3 border-b border-slate-100">
+                <h3 className="font-black text-[#2C3E50] text-sm flex items-center gap-2 uppercase tracking-wide">
+                  <div className="w-7 h-7 rounded-lg bg-[#F8F9FA] flex items-center justify-center border border-slate-200">
+                    {viewMode === 'chart' ? <PieChart size={13} className="text-[#85929E]"/> : <Table2 size={13} className="text-[#85929E]"/>}
                   </div>
-                  ผลการวิเคราะห์ {filterVars.length > 0 && filterValue.length > 0 && <span className="text-red-400 text-xs ml-2 bg-red-500/10 px-2 py-0.5 rounded-md border border-red-500/20 hidden sm:inline-block">กรองเฉพาะ: {filterValue.length} รายการ</span>}
+                  ผลการวิเคราะห์ {filterVars.length > 0 && filterValue.length > 0 && <span className="text-[#842327] text-xs ml-2 bg-[#842327]/10 px-2 py-0.5 rounded-md border border-[#842327]/20 hidden sm:inline-block">กรองเฉพาะ: {filterValue.length} รายการ</span>}
                 </h3>
                 <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
-                  <button onClick={handleExportExcel} disabled={!crosstabData || isProcessing} className="flex items-center gap-1.5 px-3 py-1.5 bg-neutral-800 text-emerald-400 hover:text-emerald-300 border border-neutral-700 hover:border-emerald-500/50 hover:bg-emerald-950/30 rounded-lg text-xs font-black transition disabled:opacity-50 shadow-sm">
+                  <button onClick={handleExportExcel} disabled={!crosstabData || isProcessing} className="flex items-center gap-1.5 px-3 py-1.5 bg-white text-[#28A745] hover:text-[#2ECC71] border border-slate-200 hover:border-[#28A745]/50 hover:bg-[#28A745]/10 rounded-lg text-xs font-black transition disabled:opacity-50 shadow-sm">
                     <DownloadCloud size={13}/>
                     <span className="hidden sm:inline">Export Excel</span>
                   </button>
-                  <div className="w-px h-5 bg-neutral-800 mx-1 hidden sm:block"></div>
+                  <div className="w-px h-5 bg-slate-200 mx-1 hidden sm:block"></div>
                   <div className="flex items-center gap-2">
                     <select 
                       value={aggType} 
                       onChange={(e) => setAggType(e.target.value)}
-                      className="text-xs font-bold bg-black border border-neutral-800 text-red-400 rounded-lg px-3 py-1.5 outline-none focus:ring-2 focus:ring-red-500 shadow-sm"
+                      className="text-xs font-bold bg-white border border-slate-200 text-[#842327] rounded-lg px-3 py-1.5 outline-none focus:ring-2 focus:ring-[#842327] shadow-sm"
                     >
                       <option value="count">นับจำนวน (Count)</option>
                       <option value="average">ค่าเฉลี่ย (Average)</option>
@@ -723,7 +736,7 @@ const DashboardLayout = () => {
                       <select 
                         value={pctType} 
                         onChange={(e) => setPctType(e.target.value)}
-                        className="text-xs font-bold bg-black border border-neutral-800 text-neutral-300 rounded-lg px-3 py-1.5 outline-none focus:ring-2 focus:ring-red-500 shadow-sm"
+                        className="text-xs font-bold bg-white border border-slate-200 text-[#2C3E50] rounded-lg px-3 py-1.5 outline-none focus:ring-2 focus:ring-[#842327] shadow-sm"
                       >
                         <option value="row">% แนวนอน (Row %)</option>
                         <option value="col">% แนวตั้ง (Col %)</option>
@@ -731,9 +744,9 @@ const DashboardLayout = () => {
                       </select>
                     )}
                   </div>
-                  <div className="flex bg-black p-1 rounded-lg border border-neutral-800">
-                    <button onClick={() => setViewMode('chart')} className={`px-3 py-1 rounded-md text-xs font-black transition ${viewMode === 'chart' ? 'bg-neutral-800 text-red-400 shadow-sm' : 'text-neutral-500 hover:text-neutral-300'}`}>กราฟ</button>
-                    <button onClick={() => setViewMode('table')} className={`px-3 py-1 rounded-md text-xs font-black transition ${viewMode === 'table' ? 'bg-neutral-800 text-red-400 shadow-sm' : 'text-neutral-500 hover:text-neutral-300'}`}>ตาราง</button>
+                  <div className="flex bg-slate-100 p-1 rounded-lg border border-slate-200">
+                    <button onClick={() => setViewMode('chart')} className={`px-3 py-1 rounded-md text-xs font-black transition ${viewMode === 'chart' ? 'bg-white text-[#842327] shadow-sm' : 'text-[#85929E] hover:text-[#2C3E50]'}`}>กราฟ</button>
+                    <button onClick={() => setViewMode('table')} className={`px-3 py-1 rounded-md text-xs font-black transition ${viewMode === 'table' ? 'bg-white text-[#842327] shadow-sm' : 'text-[#85929E] hover:text-[#2C3E50]'}`}>ตาราง</button>
                   </div>
                 </div>
               </div>
@@ -741,15 +754,15 @@ const DashboardLayout = () => {
               <div className="flex-1 overflow-auto flex flex-col">
                 {(rowVars.length > 0 && colVars.length > 0) ? (
                   (aggType === 'average' && valueVars.length === 0) ? (
-                    <p className="m-auto text-sm font-bold text-amber-400 bg-amber-950/30 px-4 py-3 rounded-xl border border-amber-900/50 shadow-sm">
+                    <p className="m-auto text-sm font-bold text-[#E67E22] bg-[#E67E22]/10 px-4 py-3 rounded-xl border border-[#E67E22]/20 shadow-sm">
                       ⚠️ กรุณาลากตัวแปรมาวางในช่อง "ค่าข้อมูล (Values)" เพื่อคำนวณค่าเฉลี่ย
                     </p>
                   ) : isProcessing ? (
                     <div className="m-auto flex flex-col items-center justify-center">
-                      <Loader2 size={32} className="text-red-500 animate-spin mb-4" />
-                      <h3 className="text-sm font-black text-white uppercase tracking-widest">กำลังประมวลผลข้อมูล...</h3>
-                      <p className="text-xs font-semibold text-neutral-400 mt-2 bg-neutral-800 px-3 py-1.5 rounded-lg border border-neutral-700">
-                        <span className="text-red-400">{rowVars.join(' ❯ ') || '?'}</span> <span className="mx-1 text-neutral-500">×</span> <span className="text-red-400">{colVars.join(' ❯ ') || '?'}</span>
+                      <Loader2 size={32} className="text-[#842327] animate-spin mb-4" />
+                      <h3 className="text-sm font-black text-[#2C3E50] uppercase tracking-widest">กำลังประมวลผลข้อมูล...</h3>
+                      <p className="text-xs font-semibold text-[#85929E] mt-2 bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-sm">
+                        <span className="text-[#842327]">{rowVars.join(' ❯ ') || '?'}</span> <span className="mx-1 text-[#85929E]">×</span> <span className="text-[#842327]">{colVars.join(' ❯ ') || '?'}</span>
                       </p>
                     </div>
                   ) : (
@@ -757,15 +770,15 @@ const DashboardLayout = () => {
                       ? (viewMode === 'chart' 
                           ? <CrosstabChart data={crosstabData} /> 
                           : <CrosstabTable data={crosstabData} rowVar={rowVars.join(' ❯ ')} colVar={colVars.join(' ❯ ')} />)
-                      : <p className="m-auto text-sm font-bold text-red-400 bg-red-950/30 px-4 py-2 rounded-xl border border-red-900/50">ไม่สามารถสร้างตารางได้ กรุณาตรวจสอบข้อมูล</p>
+                      : <p className="m-auto text-sm font-bold text-[#DC3545] bg-[#DC3545]/10 px-4 py-2 rounded-xl border border-[#DC3545]/20">ไม่สามารถสร้างตารางได้ กรุณาตรวจสอบข้อมูล</p>
                   )
                 ) : (
                   <div className="m-auto text-center flex flex-col items-center">
-                    <div className="w-16 h-16 bg-neutral-800 rounded-full flex items-center justify-center mb-4 border border-neutral-700">
-                      <BarChart2 className="h-8 w-8 text-neutral-500" />
+                    <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4 border border-slate-200">
+                      <BarChart2 className="h-8 w-8 text-[#85929E]" />
                     </div>
-                    <h3 className="text-sm font-black text-neutral-300 uppercase tracking-widest">ยังไม่มีข้อมูลแสดงผล</h3>
-                    <p className="mt-2 text-xs font-semibold text-neutral-500">กรุณาลากตัวแปรจากเมนูด้านซ้าย มาวางเพื่อเริ่มต้น</p>
+                    <h3 className="text-sm font-black text-[#2C3E50] uppercase tracking-widest">ยังไม่มีข้อมูลแสดงผล</h3>
+                    <p className="mt-2 text-xs font-semibold text-[#85929E]">กรุณาลากตัวแปรจากเมนูด้านซ้าย มาวางเพื่อเริ่มต้น</p>
                   </div>
                 )}
               </div>
@@ -777,9 +790,9 @@ const DashboardLayout = () => {
 
       {/* --- พื้นที่สำหรับแสดงกราฟที่บันทึกไว้ --- */}
       {selectedViewIds.length > 0 && (
-        <div className="mt-10 pt-8 border-t-2 border-neutral-800 border-dashed space-y-6">
-          <h2 className="font-black text-white text-xl flex items-center gap-2">
-            <LayoutDashboard size={24} className="text-red-500" />
+        <div className="mt-10 pt-8 border-t-2 border-slate-200 border-dashed space-y-6">
+          <h2 className="font-black text-[#2C3E50] text-xl flex items-center gap-2">
+            <LayoutDashboard size={24} className="text-[#842327]" />
             เปรียบเทียบรายงานที่เลือก ({selectedViewIds.length})
           </h2>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

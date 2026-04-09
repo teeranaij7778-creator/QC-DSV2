@@ -17,6 +17,18 @@ import { HotsheetModal } from './HotsheetModal';
 import { useFirebase } from './useFirebase';
 import { useDataFetch } from './useDataFetch';
 
+const ANIMATION_STYLES = `
+  @keyframes gradient-x { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+  .animate-gradient-x { background-size: 200% 200%; animation: gradient-x 4s ease infinite; }
+  @keyframes shimmer { 0% { transform: translateX(-150%) skewX(-15deg); } 100% { transform: translateX(150%) skewX(-15deg); } }
+  .shimmer { position: relative; overflow: hidden; }
+  .shimmer::after { content: ''; position: absolute; top: 0; left: 0; width: 50%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent); animation: shimmer 2.5s infinite; }
+  @keyframes float { 0% { transform: translateY(0px) scale(1); } 50% { transform: translateY(-20px) scale(1.05); } 100% { transform: translateY(0px) scale(1); } }
+  .animate-float { animation: float 6s ease-in-out infinite; }
+  @keyframes pulse-soft { 0%, 100% { opacity: 1; } 50% { opacity: 0.8; } }
+  .animate-pulse-soft { animation: pulse-soft 3s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+`;
+
 // ──────────────────────────────────────────────
 // MAIN APP
 // ──────────────────────────────────────────────
@@ -546,22 +558,23 @@ export default function App() {
   // LOGIN SCREEN
   // ──────────────────────────────────────────────
   if (!isAuthenticated) return (
-    <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-[#F8F9FA] to-[#E2E8F0] flex items-center justify-center p-4 relative overflow-hidden">
+      <style>{ANIMATION_STYLES}</style>
       {/* Setup Modal สำหรับหน้า Login */}
       {(showSettings || currentError) && (
         <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-slate-800 w-full max-w-md rounded-3xl shadow-2xl border border-slate-700 overflow-hidden flex flex-col">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-700">
-              <h3 className="font-black text-white flex items-center gap-2"><Flame size={18} className="text-orange-500"/> Firebase Setup</h3>
-              <button onClick={()=>{setShowSettings(false);clearError();}} className="p-2 hover:bg-slate-700 rounded-xl transition"><X size={18} className="text-slate-400"/></button>
+          <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+              <h3 className="font-black text-[#2C3E50] flex items-center gap-2"><Flame size={18} className="text-[#E67E22]"/> Firebase Setup</h3>
+              <button onClick={()=>{setShowSettings(false);clearError();}} className="p-2 hover:bg-slate-100 rounded-xl transition"><X size={18} className="text-[#85929E]"/></button>
             </div>
             <div className="p-6 space-y-4">
               <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl text-xs text-amber-400 font-semibold">
                 กรุณาตั้งค่า Firebase Config ก่อนเข้าสู่ระบบ
               </div>
-              <textarea className="w-full h-36 p-4 bg-slate-900 text-green-400 font-mono text-xs rounded-xl resize-none outline-none focus:ring-2 focus:ring-indigo-500 border border-slate-700"
+              <textarea className="w-full h-36 p-4 bg-slate-50 text-emerald-600 font-mono text-xs rounded-xl resize-none outline-none focus:ring-2 focus:ring-[#842327] border border-slate-200"
                 value={firebaseConfigStr} onChange={e=>setFirebaseConfigStr(e.target.value)} placeholder="วาง JSON Config..." />
-              <button onClick={handleSaveFirebaseConfig} className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-black text-sm transition">SAVE & RECONNECT</button>
+              <button onClick={handleSaveFirebaseConfig} className="w-full py-3 bg-[#842327] hover:bg-[#D32F2F] text-white rounded-xl font-black text-sm transition shadow-lg">SAVE & RECONNECT</button>
               {currentError && <div className="p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl text-rose-400 text-xs font-semibold whitespace-pre-wrap">{String(currentError?.message || currentError)}</div>}
             </div>
           </div>
@@ -569,22 +582,22 @@ export default function App() {
       )}
 
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-violet-600/20 rounded-full blur-3xl" />
-        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-indigo-500/50 to-transparent" />
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#842327]/15 rounded-full blur-3xl animate-float" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#D32F2F]/15 rounded-full blur-3xl animate-float" style={{ animationDelay: '2s' }} />
+        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#842327]/20 to-transparent" />
       </div>
-      <button onClick={() => setShowSettings(true)} className="absolute top-6 right-6 p-3 bg-slate-800/50 border border-slate-700 rounded-xl text-slate-400 hover:text-white transition z-50">
+      <button onClick={() => setShowSettings(true)} className="absolute top-6 right-6 p-3 bg-white/50 backdrop-blur-md border border-white rounded-xl text-[#85929E] hover:text-[#2C3E50] hover:shadow-lg transition-all z-50 shadow-sm">
         <Settings size={20} />
       </button>
       <div className="w-full max-w-[380px] relative z-10">
         <div className="text-center mb-10">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-indigo-600 shadow-2xl shadow-indigo-600/40 mb-6">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[#842327] shadow-xl shadow-[#842327]/30 mb-6">
             <Activity size={28} className="text-white" />
           </div>
-          <h1 className="text-2xl font-black text-white tracking-tight">QC Dashboard</h1>
-          <p className="text-slate-400 text-sm mt-1">{activeProject?.name || 'Loading...'} · Firebase Edition</p>
+          <h1 className="text-2xl font-black text-[#2C3E50] tracking-tight">QC Dashboard</h1>
+          <p className="text-[#85929E] text-sm mt-1">{activeProject?.name || 'Loading...'}</p>
         </div>
-        <div className="bg-slate-800/80 backdrop-blur-xl border border-slate-700/50 rounded-3xl p-8 shadow-2xl">
+        <div className="bg-white/70 backdrop-blur-xl border border-white rounded-3xl p-8 shadow-2xl hover:shadow-[#842327]/5 transition-shadow duration-500">
           <form onSubmit={async (e) => {
             e.preventDefault();
             if (!auth || currentError) {
@@ -602,25 +615,25 @@ export default function App() {
             }
           }} className="space-y-5">
             <div>
-              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Email</label>
+              <label className="block text-[10px] font-black text-[#85929E] uppercase tracking-widest mb-2">Email</label>
               <input type="text" value={inputUser} onChange={e=>{setInputUser(e.target.value);setLoginError('');}}
-                className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-xl text-white text-sm font-semibold outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/50 transition-all placeholder:text-slate-500"
+                className="w-full px-4 py-3 bg-[#F8F9FA] border border-slate-200 rounded-xl text-[#2C3E50] text-sm font-semibold outline-none focus:border-[#842327] focus:ring-1 focus:ring-[#842327]/50 transition-all placeholder:text-[#85929E]"
                 placeholder="Enter email" />
             </div>
             <div>
-              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Password</label>
+              <label className="block text-[10px] font-black text-[#85929E] uppercase tracking-widest mb-2">Password</label>
               <input type="password" value={inputPass} onChange={e=>{setInputPass(e.target.value);setLoginError('');}}
-                className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-xl text-white text-sm font-semibold outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/50 transition-all placeholder:text-slate-500"
+                className="w-full px-4 py-3 bg-[#F8F9FA] border border-slate-200 rounded-xl text-[#2C3E50] text-sm font-semibold outline-none focus:border-[#842327] focus:ring-1 focus:ring-[#842327]/50 transition-all placeholder:text-[#85929E]"
                 placeholder="••••••••" />
             </div>
             {loginError && (
-              <div className="flex items-center gap-2 px-4 py-2.5 bg-rose-900/40 border border-rose-700/50 rounded-xl">
-                <AlertCircle size={14} className="text-rose-400 shrink-0" />
-                <span className="text-rose-300 text-xs font-semibold">{loginError}</span>
+              <div className="flex items-center gap-2 px-4 py-2.5 bg-[#DC3545]/10 border border-[#DC3545]/20 rounded-xl">
+                <AlertCircle size={14} className="text-[#DC3545] shrink-0" />
+                <span className="text-[#DC3545] text-xs font-semibold">{loginError}</span>
               </div>
             )}
-            <button type="submit" className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-black text-sm tracking-wider transition-all shadow-lg shadow-indigo-900/40 active:scale-[0.98]">
-              เข้าสู่ระบบ
+            <button type="submit" className="w-full py-3.5 bg-gradient-to-r from-[#842327] via-[#D32F2F] to-[#842327] animate-gradient-x shimmer text-white rounded-xl font-black text-sm tracking-wider transition-all shadow-lg shadow-[#842327]/30 hover:shadow-[#D32F2F]/40 hover:-translate-y-0.5 active:scale-[0.98]">
+              Login
             </button>
           </form>
         </div>
@@ -630,35 +643,37 @@ export default function App() {
 
   if (isLoadingProjects || (isAuthenticated && !hasCheckedProjects)) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
-        <Loader2 className="animate-spin text-white" size={32} />
+      <div className="min-h-screen bg-[#F8F9FA] flex items-center justify-center">
+        <style>{ANIMATION_STYLES}</style>
+        <Loader2 className="animate-spin text-[#842327]" size={32} />
       </div>
     );
   }
 
   if (needsProjectSelection) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-[#F8F9FA] to-[#E2E8F0] flex items-center justify-center p-4">
+        <style>{ANIMATION_STYLES}</style>
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
             <Logo />
-            <h1 className="text-2xl font-black text-white tracking-tight mt-6">เลือกโปรเจกต์</h1>
-            <p className="text-slate-400 text-sm mt-1">กรุณาเลือกโปรเจกต์ที่ต้องการเข้าใช้งาน</p>
+            <h1 className="text-2xl font-black text-[#2C3E50] tracking-tight mt-6">เลือกโปรเจกต์</h1>
+            <p className="text-[#85929E] text-sm mt-1">กรุณาเลือกโปรเจกต์ที่ต้องการเข้าใช้งาน</p>
           </div>
-          <div className="bg-slate-800/80 backdrop-blur-xl border border-slate-700/50 rounded-3xl p-6 shadow-2xl space-y-3 max-h-[60vh] overflow-y-auto">
+          <div className="bg-white backdrop-blur-xl border border-slate-200 rounded-3xl p-6 shadow-xl space-y-3 max-h-[60vh] overflow-y-auto">
             {projects.map(proj => (
               <button 
                 key={proj.id} 
                 type="button"
                 onClick={() => handleSelectProject(proj.id)}
-                className="w-full text-left flex items-center gap-4 p-4 rounded-xl bg-slate-700/50 border border-slate-600 hover:bg-slate-700 hover:border-indigo-500 transition-all"
+                className="w-full text-left flex items-center gap-4 p-4 rounded-xl bg-white border border-slate-100 hover:border-[#842327]/50 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group"
               >
-                <div className="w-10 h-10 rounded-lg bg-slate-600 flex items-center justify-center">
-                  <FolderOpen size={18} className="text-slate-400" />
+                <div className="w-10 h-10 rounded-lg bg-[#F8F9FA] flex items-center justify-center group-hover:bg-[#842327]/10 transition-colors">
+                  <FolderOpen size={18} className="text-[#85929E] group-hover:text-[#842327]" />
                 </div>
                 <div>
-                  <p className="font-bold text-white">{proj.name}</p>
-                  <p className="text-xs text-slate-400 font-semibold">{proj.id}</p>
+                  <p className="font-bold text-[#2C3E50]">{proj.name}</p>
+                  <p className="text-xs text-[#85929E] font-semibold">{proj.id}</p>
                 </div>
               </button>
             ))}
@@ -672,13 +687,14 @@ export default function App() {
   // MAIN DASHBOARD
   // ──────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-slate-100 text-slate-800 font-sans">
+    <div className="min-h-screen bg-[#F8F9FA] text-[#2C3E50] font-sans flex">
+      <style>{ANIMATION_STYLES}</style>
       {/* Global Notification */}
       <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[200] flex flex-col gap-2 pointer-events-none">
         {notifications.map(notif => (
           <div key={notif.id} className={`pointer-events-auto flex items-center gap-3 px-5 py-3 rounded-2xl shadow-2xl border backdrop-blur-xl transition-all animate-in slide-in-from-bottom-2 fade-in duration-300
-            ${notif.type==='error' ? 'bg-rose-900/90 border-rose-700/50 text-rose-100' : 'bg-slate-800/90 border-slate-600/50 text-white'}`}>
-            {notif.type==='error' ? <AlertCircle size={16}/> : <CheckCircle size={16} className="text-emerald-400"/>}
+            ${notif.type==='error' ? 'bg-[#DC3545]/95 border-[#DC3545]/50 text-white' : 'bg-[#2C3E50]/95 border-[#2C3E50]/50 text-white'}`}>
+            {notif.type==='error' ? <AlertCircle size={16}/> : <CheckCircle size={16} className="text-[#28A745]"/>}
             <span className="text-sm font-semibold">{notif.message}</span>
             <button onClick={()=>setNotifications(p=>p.filter(n=>n.id!==notif.id))} className="ml-2 opacity-50 hover:opacity-100"><X size={13}/></button>
           </div>
@@ -717,23 +733,23 @@ export default function App() {
       <div className={`fixed inset-0 z-40 bg-slate-900/30 backdrop-blur-sm transition-opacity ${isFilterOpen?'opacity-100':'opacity-0 pointer-events-none'}`} onClick={()=>setIsFilterOpen(false)}/>
       <aside className={`fixed inset-y-0 right-0 z-50 w-80 bg-white shadow-2xl border-l border-slate-200 flex flex-col transform transition-transform duration-300 ${isFilterOpen?'translate-x-0':'translate-x-full'}`}>
         <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 shrink-0">
-          <div className="flex items-center gap-2 font-black text-slate-800"><Filter size={16} className="text-indigo-600"/>ตัวกรอง</div>
-          <button onClick={()=>setIsFilterOpen(false)} className="p-1.5 hover:bg-slate-100 rounded-lg transition"><X size={16} className="text-slate-400"/></button>
+          <div className="flex items-center gap-2 font-black text-[#2C3E50]"><Filter size={16} className="text-[#842327]"/>ตัวกรอง</div>
+          <button onClick={()=>setIsFilterOpen(false)} className="p-1.5 hover:bg-slate-100 rounded-lg transition"><X size={16} className="text-[#85929E]"/></button>
         </div>
         <div className="flex-1 overflow-y-auto p-6 space-y-7">
           <button onClick={()=>{setDateRange({start:'',end:''});setSelectedMonths([]);setSelectedSups([]);setSelectedAgents([]);setSelectedResults([]);setSelectedTypes([]);setSelectedTouchpoints([]);setActiveCell({agent:null,resultType:null});setActiveKpiFilter(null);}}
-            className="w-full py-2.5 text-xs font-black text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-xl border border-indigo-200 transition">ล้างทั้งหมด</button>
+            className="w-full py-2.5 text-xs font-black text-[#842327] bg-[#842327]/10 hover:bg-[#842327]/20 rounded-xl border border-[#842327]/20 transition">ล้างทั้งหมด</button>
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">ช่วงวันที่</label>
-              {(dateRange.start||dateRange.end) && <button onClick={()=>setDateRange({start:'',end:''})} className="text-[9px] font-bold text-slate-400 hover:text-rose-500">ล้าง</button>}
+              <label className="text-[9px] font-black uppercase tracking-widest text-[#85929E]">ช่วงวันที่</label>
+              {(dateRange.start||dateRange.end) && <button onClick={()=>setDateRange({start:'',end:''})} className="text-[9px] font-bold text-[#85929E] hover:text-[#DC3545]">ล้าง</button>}
             </div>
             <div className="flex gap-2">
               {[['start','Start'],['end','End']].map(([key,label]) => (
                 <div key={key} className="flex-1 space-y-1">
-                  <span className="text-[9px] text-slate-400 font-bold block">{label}</span>
+                  <span className="text-[9px] text-[#85929E] font-bold block">{label}</span>
                   <input type="date" value={dateRange[key]} onChange={e=>setDateRange({...dateRange,[key]:e.target.value})}
-                    className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:ring-2 focus:ring-indigo-500" />
+                    className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:ring-2 focus:ring-[#842327]" />
                 </div>
               ))}
             </div>
@@ -747,79 +763,114 @@ export default function App() {
         </div>
       </aside>
 
-      <div className="max-w-screen-2xl mx-auto p-4 md:p-6 space-y-5">
+      {/* Main Sidebar */}
+      <aside className="hidden md:flex w-64 bg-[#842327] border-r border-[#842327] flex-col shrink-0 sticky top-0 h-screen overflow-y-auto">
+        <div className="p-6 border-b border-white/10">
+          <Logo dark={true} />
+        </div>
+        <div className="p-4 flex flex-col gap-2 flex-1">
+          <div className="text-[10px] font-black text-white/60 uppercase tracking-widest mb-2 px-2 mt-2">เมนูหลัก</div>
+          
+          <button className="flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-black bg-gradient-to-r from-[#842327] via-[#D32F2F] to-[#842327] animate-gradient-x shimmer text-white shadow-lg shadow-black/20 w-full text-left border-none">
+            <Zap size={16}/> Live QC
+          </button>
+          
+          <a href="https://cati-ces.web.app/login" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-black text-white/80 hover:bg-white/10 hover:text-white transition w-full text-left border border-transparent">
+            <ExternalLink size={16}/> FW Progress
+          </a>
+
+          {userRole !== 'INV' && (
+            <button onClick={() => { setShowHotsheetModal(true); setHotsheetPath('Hotsheet'); }}
+              className="flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-black text-white/80 hover:bg-white/10 hover:text-white transition w-full text-left border border-transparent">
+              <FolderOpen size={16}/> Hotsheet
+            </button>
+          )}
+
+          {userRole === 'Admin' && (
+            <button onClick={() => navigate('/dashboard')} className="flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-black text-white/80 hover:bg-white/10 hover:text-white transition w-full text-left border border-transparent">
+              <BarChart2 size={16}/> Dashboard
+            </button>
+          )}
+          {['admin','qc'].includes(String(userRole).toLowerCase()) && (
+            <button onClick={handleQuickSync} disabled={isSyncing} className="flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-black text-white/80 hover:bg-white/10 hover:text-white transition disabled:opacity-50 w-full text-left border border-transparent">
+              <RefreshCw size={16} className={isSyncing ? "animate-spin" : ""}/> 
+              {isSyncing ? 'กำลังดึงข้อมูล...' : 'Sync (500)'}
+            </button>
+          )}
+          {['admin','qc','gallup','gullup'].includes(String(userRole).toLowerCase()) && (
+            <button onClick={handleExportCSV} className="flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-black text-white/80 hover:bg-white/10 hover:text-white transition w-full text-left border border-transparent">
+              <Download size={16}/> Export CSV
+            </button>
+          )}
+          
+          <div className="mt-auto">
+            {userRole==='Admin' && (
+              <button onClick={() => navigate('/admin')} className="flex items-center gap-3 px-4 py-3 bg-black/20 hover:bg-black/40 text-white rounded-xl text-xs font-black transition shadow-lg w-full text-left mb-2">
+                <Shield size={16}/> จัดการระบบกลาง
+              </button>
+            )}
+          </div>
+        </div>
+        <div className="p-4 border-t border-white/10 bg-black/10">
+          <div className="flex flex-col items-start justify-center mb-4 px-2">
+            <span className="text-[9px] font-black text-white/60 uppercase tracking-widest">Logged in as</span>
+            <span className="text-xs font-bold text-white truncate w-full" title={auth?.currentUser?.email || userRole || 'Unknown'}>{auth?.currentUser?.email || userRole || 'Unknown'}</span>
+          </div>
+          <button onClick={() => {
+            if(auth) signOut(auth);
+            try{ localStorage.removeItem('active_project_id'); } catch(e){}
+            setActiveProjectId('');
+          }} className="flex items-center justify-center gap-2 w-full p-2.5 bg-white/10 border border-transparent hover:bg-white/20 text-white rounded-xl transition font-bold text-xs" title="Logout">
+            <User size={14}/> Logout
+          </button>
+        </div>
+      </aside>
+
+      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto relative">
+        <div className="max-w-screen-2xl w-full mx-auto p-4 md:p-6 space-y-5">
 
         {/* ── HEADER ── */}
-        <header className="bg-white rounded-2xl border border-slate-200 shadow-sm px-6 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <header className="bg-white rounded-2xl border border-slate-200 shadow-sm px-6 py-4 flex items-center justify-between gap-4 sticky top-4 z-30">
           <div className="flex items-center gap-4">
-            <Logo />
-            <div className="hidden sm:block w-px h-8 bg-slate-200" />
-            <div>
-              <h1 className="font-black text-slate-800 text-lg tracking-tight flex items-center gap-2">
+            <div className="md:hidden">
+               <Logo dark={false}/>
+            </div>
+            <div className="hidden md:block">
+              <h1 className="font-black text-[#2C3E50] text-xl tracking-tight flex items-center gap-2">
                 QC Report {activeProject?.name ? `: ${activeProject.name}` : ''}
                 <button onClick={() => setNeedsProjectSelection(true)} className="ml-2 px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-lg text-[10px] font-black uppercase tracking-wider transition border border-slate-200">
                   เปลี่ยน
                 </button>
-                {loading && <RefreshCw size={14} className="animate-spin text-indigo-500" />}
+                {loading && <RefreshCw size={14} className="animate-spin text-[#842327]" />}
               </h1>
               <div className="flex items-center gap-1.5 mt-0.5">
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-[10px] text-slate-400 font-semibold">LIVE · {projectData.length} รายการ</span>
+                <div className="w-1.5 h-1.5 rounded-full bg-[#28A745] animate-pulse" />
+                <span className="text-[10px] text-[#85929E] font-semibold">LIVE · {projectData.length} รายการ</span>
               </div>
             </div>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
-            
-            {/* <-- ADDED HOTSHEET BUTTON --> */}
-            {userRole !== 'INV' && (
-              <button onClick={() => { setShowHotsheetModal(true); setHotsheetPath('Hotsheet'); }}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-black border bg-orange-50 border-orange-200 text-orange-600 hover:bg-orange-100 transition">
-                <FolderOpen size={13}/> Hotsheet
-              </button>
-            )}
-
-            {userRole === 'Admin' && (
-              <button onClick={() => navigate('/dashboard')} className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-black border bg-fuchsia-50 border-fuchsia-200 text-fuchsia-600 hover:bg-fuchsia-100 transition">
-                <BarChart2 size={13}/> Dashboard
-              </button>
-            )}
-            {['admin','qc'].includes(String(userRole).toLowerCase()) && (
-              <button onClick={handleQuickSync} disabled={isSyncing} className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-black border bg-emerald-50 border-emerald-200 text-emerald-600 hover:bg-emerald-100 transition disabled:opacity-50 shadow-sm">
-                <RefreshCw size={13} className={isSyncing ? "animate-spin" : ""}/> 
-                {isSyncing ? 'กำลังดึงข้อมูล...' : 'Sync (500)'}
-              </button>
-            )}
-            {['admin','qc','gallup','gullup'].includes(String(userRole).toLowerCase()) && (
-              <button onClick={handleExportCSV} className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-black border bg-sky-50 border-sky-200 text-sky-600 hover:bg-sky-100 transition">
-                <Download size={13}/> Export CSV
-              </button>
-            )}
-            <button className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-black border bg-indigo-50 border-indigo-200 text-indigo-600">
-              <Zap size={13}/> Live
-            </button>
+          <div className="flex items-center gap-2">
             <button onClick={()=>setIsFilterOpen(true)}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-black border transition
-                ${hasActiveFilters ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'}`}>
-              <Filter size={13}/> ตัวกรอง {hasActiveFilters ? '●' : ''}
-            </button>
-            {userRole==='Admin' && (
-              <button onClick={() => navigate('/admin')} className="flex items-center gap-1.5 px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-black transition shadow-lg shadow-rose-900/20">
-                <Shield size={13}/> จัดการระบบกลาง
-              </button>
-            )}
-            <div className="hidden sm:flex flex-col items-end justify-center ml-2 border-l border-slate-200 pl-4">
-              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Logged in as</span>
-              <span className="text-xs font-bold text-slate-700">{auth?.currentUser?.email || userRole || 'Unknown'}</span>
-            </div>
-            <button onClick={() => {
-              if(auth) signOut(auth);
-              try{ localStorage.removeItem('active_project_id'); } catch(e){}
-              setActiveProjectId('');
-            }} className="p-2 bg-slate-50 border border-slate-200 hover:bg-rose-50 hover:border-rose-200 hover:text-rose-500 text-slate-500 rounded-xl transition" title="ออกจากระบบ">
-              <User size={15}/>
+              className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-black border transition
+                ${hasActiveFilters ? 'bg-[#842327] border-[#842327] text-white shadow-md' : 'bg-[#F8F9FA] border-slate-200 text-[#85929E] hover:bg-slate-100'}`}>
+              <Filter size={14}/> ตัวกรอง {hasActiveFilters ? '●' : ''}
             </button>
           </div>
         </header>
+
+        <div className="md:hidden mb-4">
+           <h1 className="font-black text-[#2C3E50] text-lg tracking-tight flex items-center gap-2">
+             QC Report {activeProject?.name ? `: ${activeProject.name}` : ''}
+             <button onClick={() => setNeedsProjectSelection(true)} className="ml-2 px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-lg text-[10px] font-black uppercase tracking-wider transition border border-slate-200">
+               เปลี่ยน
+             </button>
+             {loading && <RefreshCw size={14} className="animate-spin text-[#842327]" />}
+           </h1>
+           <div className="flex items-center gap-1.5 mt-0.5">
+             <div className="w-1.5 h-1.5 rounded-full bg-[#28A745] animate-pulse" />
+             <span className="text-[10px] text-[#85929E] font-semibold">LIVE · {projectData.length} รายการ</span>
+           </div>
+        </div>
 
         {loading && projectData.length === 0 ? (
           <>
@@ -845,25 +896,25 @@ export default function App() {
           ].map(kpi => {
             const isActive = activeKpiFilter === kpi.id;
             const schemes = {
-              slate: { bg: 'bg-white', border: 'border-slate-200', icon: 'text-slate-600', val: 'text-slate-800', activeBg: 'bg-slate-50 ring-2 ring-slate-400' },
-              indigo: { bg: 'bg-white', border: 'border-slate-200', icon: 'text-indigo-600', val: 'text-indigo-700', activeBg: 'bg-indigo-50 ring-2 ring-indigo-400' },
-              emerald: { bg: 'bg-white', border: 'border-slate-200', icon: 'text-emerald-600', val: 'text-emerald-700', activeBg: 'bg-emerald-50 ring-2 ring-emerald-400' },
-              amber: { bg: 'bg-white', border: 'border-slate-200', icon: 'text-amber-500', val: 'text-amber-600', activeBg: 'bg-amber-50 ring-2 ring-amber-400' },
-              rose: { bg: 'bg-white', border: 'border-slate-200', icon: 'text-rose-500', val: 'text-rose-600', activeBg: 'bg-rose-50 ring-2 ring-rose-400' },
+              slate: { bg: 'bg-white', border: 'border-slate-200', icon: 'text-[#85929E]', val: 'text-[#2C3E50]', activeBg: 'bg-[#F8F9FA] ring-2 ring-[#842327]' },
+              indigo: { bg: 'bg-white', border: 'border-slate-200', icon: 'text-[#2C3E50]', val: 'text-[#2C3E50]', activeBg: 'bg-[#F8F9FA] ring-2 ring-[#842327]' },
+              emerald: { bg: 'bg-white', border: 'border-slate-200', icon: 'text-[#28A745]', val: 'text-[#28A745]', activeBg: 'bg-[#28A745]/10 ring-2 ring-[#28A745]' },
+              amber: { bg: 'bg-white', border: 'border-slate-200', icon: 'text-[#E67E22]', val: 'text-[#E67E22]', activeBg: 'bg-[#E67E22]/10 ring-2 ring-[#E67E22]' },
+              rose: { bg: 'bg-white', border: 'border-slate-200', icon: 'text-[#DC3545]', val: 'text-[#DC3545]', activeBg: 'bg-[#DC3545]/10 ring-2 ring-[#DC3545]' },
             };
             const s = schemes[kpi.scheme];
             return (
               <button key={kpi.id||'total'} onClick={()=>{ if(kpi.id === null) setActiveKpiFilter(null); else setActiveKpiFilter(isActive ? null : kpi.id); }}
-                className={`text-left p-5 rounded-2xl border transition-all active:scale-95 group relative overflow-hidden
-                  ${isActive ? s.activeBg : `${s.bg} ${s.border} hover:shadow-sm`}`}>
-                {isActive && <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-indigo-500 animate-pulse"/>}
-                <div className={`w-8 h-8 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center mb-3 ${s.icon}`}>
+                className={`text-left p-5 rounded-2xl border transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-[#842327]/10 active:scale-95 group relative overflow-hidden
+                  ${isActive ? s.activeBg : `${s.bg} ${s.border}`}`}>
+                {isActive && <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-[#842327] animate-pulse"/>}
+                <div className={`w-8 h-8 rounded-xl bg-[#F8F9FA] border border-slate-100 flex items-center justify-center mb-3 ${s.icon}`}>
                   <kpi.icon size={15}/>
                 </div>
-                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">{kpi.label}</p>
+                <p className="text-[9px] font-black text-[#85929E] uppercase tracking-widest leading-none">{kpi.label}</p>
                 <div className={`text-2xl font-black mt-1.5 ${s.val}`}>
                   {kpi.value}
-                  {kpi.sub && <span className="text-sm font-bold text-slate-400 ml-1.5">{kpi.sub}</span>}
+                  {kpi.sub && <span className="text-sm font-bold text-[#85929E] ml-1.5">{kpi.sub}</span>}
                 </div>
               </button>
             );
@@ -874,8 +925,8 @@ export default function App() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* Pie */}
           <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-            <h3 className="font-black text-slate-700 text-sm flex items-center gap-2 mb-4 uppercase tracking-wide">
-              <div className="w-7 h-7 rounded-lg bg-indigo-50 flex items-center justify-center"><PieChart size={13} className="text-indigo-600"/></div>
+            <h3 className="font-black text-[#2C3E50] text-sm flex items-center gap-2 mb-4 uppercase tracking-wide">
+              <div className="w-7 h-7 rounded-lg bg-[#F8F9FA] border border-slate-200 flex items-center justify-center"><PieChart size={13} className="text-[#85929E]"/></div>
               Case Composition
             </h3>
             <div className="flex items-center gap-4">
@@ -894,9 +945,9 @@ export default function App() {
                   <div key={c.full} className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-1.5 min-w-0">
                       <div className="w-2 h-2 rounded-full shrink-0" style={{backgroundColor:c.color}}/>
-                      <span className="text-[10px] text-slate-500 font-semibold truncate">{c.name}</span>
+                      <span className="text-[10px] text-[#85929E] font-semibold truncate">{c.name}</span>
                     </div>
-                    <span className="text-[10px] font-black text-slate-700 shrink-0">{c.count} <span className="text-slate-400 font-normal">({c.percent}%)</span></span>
+                    <span className="text-[10px] font-black text-[#2C3E50] shrink-0">{c.count} <span className="text-[#85929E] font-normal">({c.percent}%)</span></span>
                   </div>
                 ))}
               </div>
@@ -904,8 +955,8 @@ export default function App() {
           </div>
           {/* Bar */}
           <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-            <h3 className="font-black text-slate-700 text-sm flex items-center gap-2 mb-4 uppercase tracking-wide">
-              <div className="w-7 h-7 rounded-lg bg-emerald-50 flex items-center justify-center"><BarChart2 size={13} className="text-emerald-600"/></div>
+            <h3 className="font-black text-[#2C3E50] text-sm flex items-center gap-2 mb-4 uppercase tracking-wide">
+              <div className="w-7 h-7 rounded-lg bg-[#28A745]/10 flex items-center justify-center"><BarChart2 size={13} className="text-[#28A745]"/></div>
               Monthly Audit Progress
             </h3>
             <div className="h-44">
@@ -917,13 +968,13 @@ export default function App() {
                   <Tooltip contentStyle={{fontSize:10,borderRadius:10,border:'1px solid #e2e8f0'}}
                     content={({active,payload,label})=>active&&payload?.length ? (
                       <div className="bg-white border border-slate-200 p-3 rounded-xl shadow-lg">
-                        <p className="text-[10px] text-slate-400 font-bold mb-1">{label}</p>
-                        <p className="text-emerald-600 font-black text-base">{payload[0].value}%</p>
-                        <p className="text-[10px] text-slate-500">{payload[0].payload.audited} / {payload[0].payload.total} เคส</p>
+                        <p className="text-[10px] text-[#85929E] font-bold mb-1">{label}</p>
+                        <p className="text-[#28A745] font-black text-base">{payload[0].value}%</p>
+                        <p className="text-[10px] text-[#85929E]">{payload[0].payload.audited} / {payload[0].payload.total} เคส</p>
                       </div>
                     ) : null} />
                   <Bar dataKey="percent" radius={[5,5,0,0]} barSize={32} onClick={(data) => toggle(data.name, selectedMonths, setSelectedMonths)}>
-                    {monthlyData.map((e,i)=><Cell key={i} fill={e.percent>=100?'#6366f1':'#10B981'} className="cursor-pointer hover:opacity-80 outline-none transition-all"/>)}
+                    {monthlyData.map((e,i)=><Cell key={i} fill={e.percent>=100?'#842327':'#28A745'} className="cursor-pointer hover:opacity-80 outline-none transition-all"/>)}
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
@@ -934,64 +985,64 @@ export default function App() {
         {/* ── MATRIX TABLE ── */}
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
           <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-            <h3 className="font-black text-slate-700 text-sm flex items-center gap-2 uppercase tracking-wide">
-              <div className="w-7 h-7 rounded-lg bg-slate-50 flex items-center justify-center border border-slate-200"><Users size={13} className="text-slate-500"/></div>
+            <h3 className="font-black text-[#2C3E50] text-sm flex items-center gap-2 uppercase tracking-wide">
+              <div className="w-7 h-7 rounded-lg bg-[#F8F9FA] flex items-center justify-center border border-slate-200"><Users size={13} className="text-[#85929E]"/></div>
               สรุปพนักงาน × ผลการตรวจ
             </h3>
-            <span className="text-[10px] text-slate-400 font-semibold">{agentSummary.length} พนักงาน</span>
+            <span className="text-[10px] text-[#85929E] font-semibold">{agentSummary.length} พนักงาน</span>
           </div>
           <div className="overflow-auto max-h-96">
             <table className="w-full text-xs border-separate border-spacing-0 min-w-max">
               <thead className="sticky top-0 z-20 bg-white shadow-sm">
                 <tr>
-                  <th className="sticky left-0 z-30 px-6 py-3 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-r border-slate-100 bg-white min-w-[200px] shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">Interviewer</th>
+                  <th className="sticky left-0 z-30 px-6 py-3 text-left text-[10px] font-black text-[#85929E] uppercase tracking-widest border-b border-r border-slate-200 bg-[#F8F9FA] min-w-[200px] shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">Interviewer</th>
                   {(RESULT_ORDER || []).map(type => (
-                    <th key={type} className="px-3 py-3 text-center text-[10px] font-black border-b border-slate-100 bg-slate-50 max-w-[120px]">
+                    <th key={type} className="px-3 py-3 text-center text-[10px] font-black border-b border-slate-200 bg-white max-w-[120px]">
                       <span className="line-clamp-2 leading-tight" style={{color:getResultColor(type)}}>{formatResultDisplay(type)}</span>
                     </th>
                   ))}
-                  <th className="px-6 py-3 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 bg-slate-100 min-w-[80px]">TOTAL</th>
+                  <th className="px-6 py-3 text-center text-[10px] font-black text-[#85929E] uppercase tracking-widest border-b border-slate-200 bg-[#F8F9FA] min-w-[80px]">TOTAL</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-50">
+              <tbody className="divide-y divide-slate-100">
                 {agentSummary.map((agent,i) => (
-                  <tr key={i} className="hover:bg-slate-50 transition-colors group">
-                    <td className="sticky left-0 z-10 px-6 py-3.5 font-bold text-[13px] text-slate-700 border-r border-slate-100 bg-white group-hover:bg-slate-50 transition-colors shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">{agent.name}</td>
+                  <tr key={i} className="hover:bg-[#F8F9FA] transition-colors group">
+                    <td className="sticky left-0 z-10 px-6 py-3.5 font-bold text-[13px] text-[#2C3E50] border-r border-slate-200 bg-white group-hover:bg-[#F8F9FA] transition-colors shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">{agent.name}</td>
                     {(RESULT_ORDER || []).map(type => {
                       const val = agent[type];
                       const isActive = activeCell.agent===agent.name && activeCell.resultType===type;
                       return (
                         <td key={type} onClick={()=>val>0&&setActiveCell(p=>p.agent===agent.name&&p.resultType===type?{agent:null,resultType:null}:{agent:agent.name,resultType:type})}
-                          className={`px-3 py-3.5 text-center transition-all border-r border-slate-50
-                            ${val>0?'cursor-pointer':''} ${isActive?'bg-indigo-50':''}`}>
+                          className={`px-3 py-3.5 text-center transition-all border-r border-slate-100
+                            ${val>0?'cursor-pointer':''} ${isActive?'bg-[#842327]/10':''}`}>
                           {val > 0 ? (
                             <div className="flex flex-col items-center">
                               <span className="font-black text-sm" style={{color:getResultColor(type)}}>{val}</span>
-                              <span className="text-[10px] text-slate-400">{agent.total>0?((val/agent.total)*100).toFixed(0):0}%</span>
+                              <span className="text-[10px] text-[#85929E]">{agent.total>0?((val/agent.total)*100).toFixed(0):0}%</span>
                             </div>
                           ) : <span className="text-slate-200">·</span>}
                         </td>
                       );
                     })}
-                    <td className="px-6 py-3.5 text-center bg-slate-50">
-                      <span className="font-black text-slate-700">{agent.total}</span>
-                      <div className="text-[10px] text-slate-400">{totalSummary.total>0?((agent.total/totalSummary.total)*100).toFixed(1):0}%</div>
+                    <td className="px-6 py-3.5 text-center bg-[#F8F9FA]">
+                      <span className="font-black text-[#2C3E50]">{agent.total}</span>
+                      <div className="text-[10px] text-[#85929E]">{totalSummary.total>0?((agent.total/totalSummary.total)*100).toFixed(1):0}%</div>
                     </td>
                   </tr>
                 ))}
                 <tr className="bg-slate-100 border-t-2 border-slate-200 font-black">
-                  <td className="sticky left-0 z-10 px-6 py-4 text-indigo-600 font-black text-[13px] uppercase border-r border-slate-200 bg-slate-100 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">GRAND TOTAL</td>
+                  <td className="sticky left-0 z-10 px-6 py-4 text-[#842327] font-black text-[13px] uppercase border-r border-slate-200 bg-slate-100 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">GRAND TOTAL</td>
                   {(RESULT_ORDER || []).map(type => {
                     const val = totalSummary[type];
                     return (
                       <td key={type} className="px-3 py-4 text-center border-r border-slate-200">
                         <span className="font-black text-sm" style={{color:getResultColor(type)}}>{val||0}</span>
-                        <div className="text-[10px] text-slate-500">{totalSummary.total>0?((val/totalSummary.total)*100).toFixed(1):0}%</div>
+                        <div className="text-[10px] text-[#85929E]">{totalSummary.total>0?((val/totalSummary.total)*100).toFixed(1):0}%</div>
                       </td>
                     );
                   })}
                   <td className="px-6 py-4 text-center bg-slate-200">
-                    <span className="font-black text-indigo-600 text-base">{totalSummary.total}</span>
+                    <span className="font-black text-[#842327] text-base">{totalSummary.total}</span>
                   </td>
                 </tr>
               </tbody>
@@ -1004,8 +1055,8 @@ export default function App() {
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
             <div className="flex items-center justify-between mb-5">
               <h3 className="font-black text-slate-700 text-sm flex items-center gap-2 uppercase">
-                <TrendingUp size={15} className="text-indigo-500"/>
-                Trend: <span className="text-indigo-600">{activeCell.agent}</span>
+                <TrendingUp size={15} className="text-[#842327]"/>
+                Trend: <span className="text-[#842327]">{activeCell.agent}</span>
               </h3>
               <button onClick={()=>setActiveCell({agent:null,resultType:null})} className="p-1.5 hover:bg-slate-100 rounded-lg transition"><X size={14} className="text-slate-400"/></button>
             </div>
@@ -1296,6 +1347,7 @@ export default function App() {
         )}
 
       </div>
+    </div>
     </div>
   );
 }

@@ -2,17 +2,16 @@ import React from 'react';
 import { Activity, CheckSquare, Square } from 'lucide-react';
 import { getResultColor, formatResultDisplay } from './utils';
 
-export const Logo = () => (
+export const Logo = ({ dark = false }) => (
   <div className="flex items-center gap-3">
     <div className="relative">
-      <div className="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-300">
-        <Activity size={18} className="text-white" />
+      <div className={`w-9 h-9 rounded-xl flex items-center justify-center shadow-lg ${dark ? 'bg-white shadow-black/20' : 'bg-[#842327] shadow-[#842327]/30'}`}>
+        <Activity size={18} className={dark ? 'text-[#842327]' : 'text-white'} />
       </div>
-      <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-emerald-400 border-2 border-white animate-pulse" />
+      <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-[#28A745] border-2 border-white animate-pulse" />
     </div>
     <div>
-      <div className="text-sm font-black tracking-widest text-slate-800 uppercase leading-none">INTAGE</div>
-      <div className="text-[9px] font-bold text-slate-400 tracking-[0.2em] uppercase leading-none mt-0.5">Firebase Edition</div>
+      <div className={`text-sm font-black tracking-widest uppercase leading-none ${dark ? 'text-white' : 'text-[#2C3E50]'}`}>INTAGE</div>
     </div>
   </div>
 );
